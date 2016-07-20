@@ -33,10 +33,28 @@ public class CryptoSettingBuilder {
     }
 
     public CryptoSettings build() {
-        CryptoSettings settings = new CryptoSettings();
-        settings.setTransformation(getTransformation());
-        settings.setProvider(getProvider());
-        settings.setKeySpecGenerator(getKeySpecGenerator());
-        return settings;
+        final String _transformation = transformation;
+        final String _provider = provider;
+        final KeySpecGenerator _keySpecGenerator = keySpecGenerator;
+        return new CryptoSettings() {
+            @Override
+            public String getTransformation() {
+                return _transformation;
+            }
+
+            @Override
+            public String getProvider() {
+                return _provider;
+            }
+
+            @Override
+            public KeySpecGenerator getKeySpecGenerator() {
+                return _keySpecGenerator;
+            }
+        };
+    }
+
+    public CryptoSettings buildDefault() {
+        return new DefaultCryptoSettings();
     }
 }

@@ -29,7 +29,7 @@ public class SessionGenerator {
     }
 
     public String generate() throws GeneralSecurityException {
-        SessionKeyProvider provider = _settings.getSessionKeyProvider();
+        SessionKeyFactory provider = _settings.getSessionKeyFactory();
         return provider.getSessionKey(_settings);
     }
 }

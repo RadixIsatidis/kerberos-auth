@@ -2,17 +2,20 @@ package net.yan.kerberos.core.session;
 
 import com.google.common.base.Strings;
 
-import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
 
-public class DefaultSessionKeyProvider implements SessionKeyProvider {
+public class DefaultSessionKeyFactory implements SessionKeyFactory {
 
     private SecureRandom secureRandom;
 
     private MessageDigest messageDigest;
 
-    public SecureRandom getSecureRandom(SessionSettings settings) throws GeneralSecurityException {
+    private SecureRandom getSecureRandom(SessionSettings _settings)
+            throws NoSuchAlgorithmException, NoSuchProviderException {
+        DefaultSessionSettings settings = (DefaultSessionSettings) _settings;
         if (null == secureRandom) {
             if (Strings.isNullOrEmpty(settings.getSecureRandomProvider()))
                 secureRandom = SecureRandom.getInstance(settings.getSecureRandomAlgorithm());
@@ -22,7 +25,9 @@ public class DefaultSessionKeyProvider implements SessionKeyProvider {
         return secureRandom;
     }
 
-    public MessageDigest getMessageDigest(SessionSettings settings) throws GeneralSecurityException {
+    private MessageDigest getMessageDigest(SessionSettings _settings)
+            throws NoSuchAlgorithmException, NoSuchProviderException {
+        DefaultSessionSettings settings = (DefaultSessionSettings) _settings;
         if (null == messageDigest) {
             if (Strings.isNullOrEmpty(settings.getMessageDigestProvider()))
                 messageDigest = MessageDigest.getInstance(settings.getMessageDigestAlgorithm());
@@ -33,7 +38,8 @@ public class DefaultSessionKeyProvider implements SessionKeyProvider {
     }
 
     @Override
-    public String getSessionKey(SessionSettings settings) throws GeneralSecurityException {
+    public String getSessionKey(SessionSettings settings)
+            throws NoSuchProviderException, NoSuchAlgorithmException {
         SecureRandom prng = getSecureRandom(settings);
         String randomNum = Integer.toString(prng.nextInt());
         MessageDigest sha = getMessageDigest(settings);

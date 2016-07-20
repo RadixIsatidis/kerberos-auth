@@ -1,7 +1,7 @@
 package net.yan.kerberos.as;
 
 import net.yan.kerberos.config.KerberosSettings;
-import net.yan.kerberos.core.crypto.CryptoService;
+import net.yan.kerberos.core.crypto.CryptoProvider;
 import net.yan.kerberos.core.session.SessionGenerator;
 import net.yan.kerberos.data.AuthenticationServiceRequest;
 import net.yan.kerberos.data.AuthenticationServiceResponse;
@@ -45,14 +45,14 @@ public class AuthenticationService {
         this.kerberosSettings = kerberosSettings;
     }
 
-    private CryptoService cryptoService;
+    private CryptoProvider cryptoProvider;
 
-    public CryptoService getCryptoService() {
-        return cryptoService;
+    public CryptoProvider getCryptoProvider() {
+        return cryptoProvider;
     }
 
-    public void setCryptoService(CryptoService cryptoService) {
-        this.cryptoService = cryptoService;
+    public void setCryptoProvider(CryptoProvider cryptoProvider) {
+        this.cryptoProvider = cryptoProvider;
     }
 
     public AuthenticationService() {
@@ -62,12 +62,12 @@ public class AuthenticationService {
         return userDetailsService.loadUserByUsername(request.getUsername());
     }
 
-    public TicketGrantingTicket createTicketGrantingTicket(AuthenticationServiceRequest request) throws GeneralSecurityException {
+    public TicketGrantingTicket createTicketGrantingTicket(AuthenticationServiceRequest request)
+            throws GeneralSecurityException {
         String sessionKey = sessionGenerator.generate();
         TicketGrantingTicket tgt = new TicketGrantingTicket();
         tgt.setAddress(request.getAddress());
-        Instant instant = Instant.now();
-        tgt.setStartTime(instant.toEpochMilli());
+        tgt.setStartTime(Instant.now().toEpochMilli());
         tgt.setLifeTime(kerberosSettings.getSessionLifeTime());
         tgt.setSessionKey(sessionKey);
         tgt.setTicketGrantServer(kerberosSettings.getTicketGrantServer());
@@ -79,13 +79,13 @@ public class AuthenticationService {
             UserDetails userDetails
     ) throws GeneralSecurityException, IOException {
         TicketGrantingTicket tgt = createTicketGrantingTicket(request);
-        String cryptoTGT = cryptoService.encryptObject(tgt, kerberosSettings.getMasterKey());
+        String cryptoTGT = cryptoProvider.encryptObject(tgt, kerberosSettings.getMasterKey());
 
         AuthenticationServiceResponse response = new AuthenticationServiceResponse();
         response.setSessionKey(tgt.getSessionKey());
         response.setTicketGrantingServer(cryptoTGT);
         response.setTicketGrantingServer(kerberosSettings.getTicketGrantServer());
-        return cryptoService.encryptObject(response, userDetails.getPassword());
+        return cryptoProvider.encryptObject(response, userDetails.getPassword());
     }
 
 
