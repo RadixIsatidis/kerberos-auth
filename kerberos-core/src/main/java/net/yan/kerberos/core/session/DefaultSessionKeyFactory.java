@@ -37,7 +37,6 @@ public class DefaultSessionKeyFactory implements SessionKeyFactory {
         return messageDigest;
     }
 
-    @Override
     public String getSessionKey(SessionSettings settings)
             throws NoSuchProviderException, NoSuchAlgorithmException {
         SecureRandom prng = getSecureRandom(settings);

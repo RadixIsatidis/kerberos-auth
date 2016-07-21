@@ -4,6 +4,8 @@ import java.io.Serializable;
 
 public class AuthenticationServiceResponse implements Serializable {
 
+    long serialVersionUID = -2584709511265292237L;
+
     private String ticketGrantingTicket;
 
     private String sessionKey;

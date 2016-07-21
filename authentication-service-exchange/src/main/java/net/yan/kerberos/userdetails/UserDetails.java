@@ -9,6 +9,8 @@ import java.io.Serializable;
  */
 public interface UserDetails extends Serializable {
 
+    long serialVersionUID = -4587709551265291237L;
+
     /**
      * Returns the password used to authenticate the user.
      *

@@ -4,6 +4,8 @@ import java.io.Serializable;
 
 public class TicketGrantingTicket implements Serializable {
 
+    long serialVersionUID = -7584709511261292537L;
+
     private String username;
 
     private String address;

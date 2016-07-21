@@ -1,5 +1,8 @@
 package net.yan.kerberos.core.crypto;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import javax.crypto.*;
 import java.io.*;
 import java.security.*;
@@ -11,6 +14,8 @@ import java.util.Base64;
  * Providing encryption and decryption services.
  */
 public class CryptoProvider {
+
+    private static final Log log = LogFactory.getLog(CryptoProvider.class);
 
     private final CryptoFactory _cryptoFactory;
 
@@ -83,7 +88,7 @@ public class CryptoProvider {
      * Generates a <code>SecretKey</code> object from the provided key
      * specification (key material) and the specified algorithm.
      *
-     * @param keySpec the specification (key material) of the secret key
+     * @param key the specification (key material) of the secret key
      * @return the secret key
      * @throws NoSuchAlgorithmException if no Provider supports a
      *                                  SecretKeyFactorySpi implementation for the
@@ -94,9 +99,11 @@ public class CryptoProvider {
      *                                  is inappropriate for this secret-key factory to produce a secret key.
      * @throws KeyException             if the given key is not valid
      */
-    public SecretKey generateKey(String keySpec)
+    public SecretKey generateKey(String key)
             throws NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException, KeyException {
-        return _cryptoFactory.generateKey(_settings, keySpec);
+        if (log.isDebugEnabled())
+            log.debug("Generate secret key using key string: " + key);
+        return _cryptoFactory.generateKey(_settings, key);
     }
 
     /**
@@ -303,7 +310,7 @@ public class CryptoProvider {
             NoSuchProviderException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
         Cipher cipher = _cryptoFactory.getCipher(_settings);
         cipher.init(Cipher.ENCRYPT_MODE, secretKey);
-        return cipher.doFinal(Base64.getDecoder().decode(input));
+        return Base64.getEncoder().encode(cipher.doFinal(input));
     }
 
     /**
@@ -403,6 +410,7 @@ public class CryptoProvider {
             NoSuchProviderException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
         Cipher cipher = _cryptoFactory.getCipher(_settings);
         cipher.init(Cipher.DECRYPT_MODE, secretKey);
-        return Base64.getEncoder().encode(cipher.doFinal(input));
+        input = Base64.getDecoder().decode(input);
+        return cipher.doFinal(input);
     }
 }

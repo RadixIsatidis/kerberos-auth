@@ -12,30 +12,33 @@ public class CryptoSettingBuilder {
         return transformation;
     }
 
-    public void setTransformation(String transformation) {
+    public CryptoSettingBuilder setTransformation(String transformation) {
         this.transformation = transformation;
+        return this;
     }
 
     public String getProvider() {
         return provider;
     }
 
-    public void setProvider(String provider) {
+    public CryptoSettingBuilder setProvider(String provider) {
         this.provider = provider;
+        return this;
     }
 
     public KeySpecGenerator getKeySpecGenerator() {
         return keySpecGenerator;
     }
 
-    public void setKeySpecGenerator(KeySpecGenerator keySpecGenerator) {
+    public CryptoSettingBuilder setKeySpecGenerator(KeySpecGenerator keySpecGenerator) {
         this.keySpecGenerator = keySpecGenerator;
+        return this;
     }
 
     public CryptoSettings build() {
-        final String _transformation = transformation;
-        final String _provider = provider;
-        final KeySpecGenerator _keySpecGenerator = keySpecGenerator;
+        final String _transformation = getTransformation();
+        final String _provider = getProvider();
+        final KeySpecGenerator _keySpecGenerator = getKeySpecGenerator();
         return new CryptoSettings() {
             @Override
             public String getTransformation() {
