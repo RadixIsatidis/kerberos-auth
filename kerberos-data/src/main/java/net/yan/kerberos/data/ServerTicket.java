@@ -4,8 +4,7 @@ import java.io.Serializable;
 
 public class ServerTicket implements Serializable {
 
-    long serialVersionUID = -1584709511265292537L;
-
+    private static final long serialVersionUID = -4269131580052198764L;
     private String username;
 
     private String address;

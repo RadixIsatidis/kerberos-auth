@@ -21,7 +21,7 @@ public class CryptoProvider {
 
     private final CryptoSettings _settings;
 
-    public CryptoFactory getCryptoProvider() {
+    public CryptoFactory getCryptoFactory() {
         return _cryptoFactory;
     }
 

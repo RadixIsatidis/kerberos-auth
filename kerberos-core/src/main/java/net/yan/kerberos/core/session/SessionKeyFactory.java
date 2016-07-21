@@ -3,7 +3,7 @@ package net.yan.kerberos.core.session;
 import java.security.GeneralSecurityException;
 
 /**
- * Class that defines API use by {@link SessionGenerator}
+ * Class that defines API use by {@link SessionKeyProvider}
  */
 public interface SessionKeyFactory {
 
@@ -14,5 +14,5 @@ public interface SessionKeyFactory {
      * @return session key string.
      * @throws GeneralSecurityException
      */
-    String getSessionKey(SessionSettings settings) throws GeneralSecurityException;
+    byte[] getSessionKey(SessionSettings settings) throws GeneralSecurityException;
 }

@@ -37,12 +37,11 @@ public class DefaultSessionKeyFactory implements SessionKeyFactory {
         return messageDigest;
     }
 
-    public String getSessionKey(SessionSettings settings)
+    public byte[] getSessionKey(SessionSettings settings)
             throws NoSuchProviderException, NoSuchAlgorithmException {
         SecureRandom prng = getSecureRandom(settings);
         String randomNum = Integer.toString(prng.nextInt());
         MessageDigest sha = getMessageDigest(settings);
-        byte[] result = sha.digest(randomNum.getBytes());
-        return new String(result);
+        return sha.digest(randomNum.getBytes());
     }
 }

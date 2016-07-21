@@ -4,13 +4,13 @@ import java.io.Serializable;
 
 public class AuthenticationServiceResponse implements Serializable {
 
-    long serialVersionUID = -2584709511265292237L;
+    private static final long serialVersionUID = -812429616542585542L;
 
     private String ticketGrantingTicket;
 
     private String sessionKey;
 
-    private String ticketGrantingServer;
+    private String ticketGrantingServerName;
 
     public String getTicketGrantingTicket() {
         return ticketGrantingTicket;
@@ -28,11 +28,41 @@ public class AuthenticationServiceResponse implements Serializable {
         this.sessionKey = sessionKey;
     }
 
-    public String getTicketGrantingServer() {
-        return ticketGrantingServer;
+    public String getTicketGrantingServerName() {
+        return ticketGrantingServerName;
     }
 
-    public void setTicketGrantingServer(String ticketGrantingServer) {
-        this.ticketGrantingServer = ticketGrantingServer;
+    public void setTicketGrantingServerName(String ticketGrantingServerName) {
+        this.ticketGrantingServerName = ticketGrantingServerName;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof AuthenticationServiceResponse)) return false;
+
+        AuthenticationServiceResponse response = (AuthenticationServiceResponse) o;
+
+        if (getTicketGrantingTicket() != null ? !getTicketGrantingTicket().equals(response.getTicketGrantingTicket()) : response.getTicketGrantingTicket() != null) return false;
+        if (getSessionKey() != null ? !getSessionKey().equals(response.getSessionKey()) : response.getSessionKey() != null) return false;
+        return getTicketGrantingServerName() != null ? getTicketGrantingServerName().equals(response.getTicketGrantingServerName()) : response.getTicketGrantingServerName() == null;
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = getTicketGrantingTicket() != null ? getTicketGrantingTicket().hashCode() : 0;
+        result = 31 * result + (getSessionKey() != null ? getSessionKey().hashCode() : 0);
+        result = 31 * result + (getTicketGrantingServerName() != null ? getTicketGrantingServerName().hashCode() : 0);
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "AuthenticationServiceResponse{" +
+                "ticketGrantingTicket='" + ticketGrantingTicket + '\'' +
+                ", sessionKey='" + sessionKey + '\'' +
+                ", ticketGrantingServerName='" + ticketGrantingServerName + '\'' +
+                '}';
     }
 }

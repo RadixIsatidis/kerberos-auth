@@ -9,12 +9,13 @@
     <packaging>pom</packaging>
     <version>1.0-SNAPSHOT</version>
     <modules>
-        <module>authentication-service-exchange</module>
+        <module>server-authentication-service-exchange</module>
         <module>ticket-granting-service-exchange</module>
         <module>client-server-exchange</module>
         <module>kerberos-core</module>
         <module>kerberos-data</module>
         <module>kerberos-annotations</module>
+        <module>client-authentication-service-exchange</module>
     </modules>
 
     <properties>
@@ -29,6 +30,11 @@
             <artifactId>commons-logging</artifactId>
             <version>1.2</version>
         </dependency>
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>1.9</version>
+        </dependency>
 
         <dependency>
             <groupId>junit</groupId>
@@ -38,4 +44,17 @@
         </dependency>
     </dependencies>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.3.2</version>
+                <configuration>
+                    <source>${java-version}</source>
+                    <target>${java-version}</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>

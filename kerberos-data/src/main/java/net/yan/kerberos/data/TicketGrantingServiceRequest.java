@@ -1,7 +1,11 @@
 package net.yan.kerberos.data;
 
-public class TicketGrantingServiceRequest {
+import java.io.Serializable;
 
+public class TicketGrantingServiceRequest implements Serializable {
+
+
+    private static final long serialVersionUID = 163195294338279593L;
     private String authenticatiorString;
 
     private Authenticator authenticator;
@@ -60,5 +64,36 @@ public class TicketGrantingServiceRequest {
 
     public void setServerTicketGrantingTicket(TicketGrantingTicket serverTicketGrantingTicket) {
         this.serverTicketGrantingTicket = serverTicketGrantingTicket;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof TicketGrantingServiceRequest)) return false;
+
+        TicketGrantingServiceRequest that = (TicketGrantingServiceRequest) o;
+
+        if (getAuthenticatiorString() != null ? !getAuthenticatiorString().equals(that.getAuthenticatiorString()) : that.getAuthenticatiorString() != null) return false;
+        if (getClientTicketGrantingTicketString() != null ? !getClientTicketGrantingTicketString().equals(that.getClientTicketGrantingTicketString()) : that.getClientTicketGrantingTicketString() != null)
+            return false;
+        return getServerTicketGrantingTicketString() != null ? getServerTicketGrantingTicketString().equals(that.getServerTicketGrantingTicketString()) : that.getServerTicketGrantingTicketString() == null;
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = getAuthenticatiorString() != null ? getAuthenticatiorString().hashCode() : 0;
+        result = 31 * result + (getClientTicketGrantingTicketString() != null ? getClientTicketGrantingTicketString().hashCode() : 0);
+        result = 31 * result + (getServerTicketGrantingTicketString() != null ? getServerTicketGrantingTicketString().hashCode() : 0);
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "TicketGrantingServiceRequest{" +
+                "authenticatiorString='" + authenticatiorString + '\'' +
+                ", clientTicketGrantingTicketString='" + clientTicketGrantingTicketString + '\'' +
+                ", serverTicketGrantingTicketString='" + serverTicketGrantingTicketString + '\'' +
+                '}';
     }
 }

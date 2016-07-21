@@ -217,3 +217,8 @@ pip-log.txt
 /.idea
 *.iml
 /kerberos-core/target
+/kerberos-data/target
+/client-authentication-service-exchange/target
+/client-server-exchange/target
+/kerberos-annotations/target
+/ticket-granting-service-exchange/target
