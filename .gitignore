@@ -222,3 +222,4 @@ pip-log.txt
 /client-server-exchange/target
 /kerberos-annotations/target
 /ticket-granting-service-exchange/target
+/server-authentication-service-exchange/target
