@@ -1,10 +1,15 @@
 package net.yan.kerberos.config;
 
+/**
+ * Builder for {@link KerberosSettings}
+ *
+ * @see KerberosSettings
+ */
 public class KerberosSettingsBuilder {
 
     private Long sessionLifeTime;
 
-    private String ticketGrantServer;
+    private String ticketGrantServerName;
 
     private String masterKey;
 
@@ -12,17 +17,23 @@ public class KerberosSettingsBuilder {
         return sessionLifeTime;
     }
 
+    /**
+     * @see KerberosSettings#getSessionLifeTime()
+     */
     public KerberosSettingsBuilder setSessionLifeTime(Long sessionLifeTime) {
         this.sessionLifeTime = sessionLifeTime;
         return this;
     }
 
-    public String getTicketGrantServer() {
-        return ticketGrantServer;
+    public String getTicketGrantServerName() {
+        return ticketGrantServerName;
     }
 
-    public KerberosSettingsBuilder setTicketGrantServer(String ticketGrantServer) {
-        this.ticketGrantServer = ticketGrantServer;
+    /**
+     * @see KerberosSettings#getTicketGrantingServerName()
+     */
+    public KerberosSettingsBuilder setTicketGrantServerName(String ticketGrantServerName) {
+        this.ticketGrantServerName = ticketGrantServerName;
         return this;
     }
 
@@ -30,6 +41,9 @@ public class KerberosSettingsBuilder {
         return masterKey;
     }
 
+    /**
+     * @see KerberosSettings#getMasterKey()
+     */
     public KerberosSettingsBuilder setMasterKey(String masterKey) {
         this.masterKey = masterKey;
         return this;
@@ -37,7 +51,7 @@ public class KerberosSettingsBuilder {
 
     public KerberosSettings build() {
         final Long _sessionLifeTime = getSessionLifeTime();
-        final String _ticketGrantServer = getTicketGrantServer();
+        final String _ticketGrantServerName = getTicketGrantServerName();
         final String _masterKey = getMasterKey();
         return new KerberosSettings() {
 
@@ -47,8 +61,8 @@ public class KerberosSettingsBuilder {
             }
 
             @Override
-            public String getTicketGrantServerName() {
-                return _ticketGrantServer;
+            public String getTicketGrantingServerName() {
+                return _ticketGrantServerName;
             }
 
             @Override

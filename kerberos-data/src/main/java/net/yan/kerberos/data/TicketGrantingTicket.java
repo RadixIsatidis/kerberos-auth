@@ -2,19 +2,41 @@ package net.yan.kerberos.data;
 
 import java.io.Serializable;
 
+/**
+ * TGT
+ */
 public class TicketGrantingTicket implements Serializable {
 
     private static final long serialVersionUID = -4560268207092674442L;
+
+    /**
+     * The ticket holder username.
+     */
     private String username;
 
+    /**
+     * The ticket holder address
+     */
     private String address;
 
+    /**
+     * The ticket granting server address.
+     */
     private String ticketGrantServer;
 
+    /**
+     * Create time.
+     */
     private Long startTime;
 
+    /**
+     * Life time.
+     */
     private Long lifeTime;
 
+    /**
+     * Session key witch belong to current session.
+     */
     private String sessionKey;
 
     public String getUsername() {

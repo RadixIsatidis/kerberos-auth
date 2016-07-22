@@ -12,7 +12,7 @@ public interface SessionKeyFactory {
      *
      * @param settings settings.
      * @return session key string.
-     * @throws GeneralSecurityException
+     * @throws GeneralSecurityException any security exception.
      */
     byte[] getSessionKey(SessionSettings settings) throws GeneralSecurityException;
 }

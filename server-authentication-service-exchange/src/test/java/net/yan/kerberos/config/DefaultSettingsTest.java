@@ -68,7 +68,7 @@ public abstract class DefaultSettingsTest {
             kerberosSettings = new KerberosSettingsBuilder()
                     .setMasterKey("My master key to encrypt anything. Wish it long enough.")
                     .setSessionLifeTime(38 * 60 * 1000L)
-                    .setTicketGrantServer("localhost")
+                    .setTicketGrantServerName("localhost")
                     .build();
         }
 

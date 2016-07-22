@@ -2,28 +2,50 @@ package net.yan.kerberos.data;
 
 import java.io.Serializable;
 
+/**
+ * TGS-Exchange request.
+ */
 public class TicketGrantingServiceRequest implements Serializable {
 
 
     private static final long serialVersionUID = 163195294338279593L;
-    private String authenticatiorString;
 
+    /**
+     * Encrypted {@link Authenticator}
+     */
+    private String authenticatorString;
+
+    /**
+     * Decrypted authenticator.
+     */
     private Authenticator authenticator;
 
+    /**
+     * Encrypted client {@link TicketGrantingTicket}
+     */
     private String clientTicketGrantingTicketString;
 
+    /**
+     * Decrypted client ticket granting ticket.
+     */
     private TicketGrantingTicket clientTicketGrantingTicket;
 
+    /**
+     * Encrypted server {@link TicketGrantingTicket}
+     */
     private String serverTicketGrantingTicketString;
 
+    /**
+     * Decrypted server ticket granting ticket
+     */
     private TicketGrantingTicket serverTicketGrantingTicket;
 
-    public String getAuthenticatiorString() {
-        return authenticatiorString;
+    public String getAuthenticatorString() {
+        return authenticatorString;
     }
 
-    public void setAuthenticatiorString(String authenticatiorString) {
-        this.authenticatiorString = authenticatiorString;
+    public void setAuthenticatorString(String authenticatorString) {
+        this.authenticatorString = authenticatorString;
     }
 
     public Authenticator getAuthenticator() {
@@ -73,7 +95,7 @@ public class TicketGrantingServiceRequest implements Serializable {
 
         TicketGrantingServiceRequest that = (TicketGrantingServiceRequest) o;
 
-        if (getAuthenticatiorString() != null ? !getAuthenticatiorString().equals(that.getAuthenticatiorString()) : that.getAuthenticatiorString() != null) return false;
+        if (getAuthenticatorString() != null ? !getAuthenticatorString().equals(that.getAuthenticatorString()) : that.getAuthenticatorString() != null) return false;
         if (getClientTicketGrantingTicketString() != null ? !getClientTicketGrantingTicketString().equals(that.getClientTicketGrantingTicketString()) : that.getClientTicketGrantingTicketString() != null)
             return false;
         return getServerTicketGrantingTicketString() != null ? getServerTicketGrantingTicketString().equals(that.getServerTicketGrantingTicketString()) : that.getServerTicketGrantingTicketString() == null;
@@ -82,7 +104,7 @@ public class TicketGrantingServiceRequest implements Serializable {
 
     @Override
     public int hashCode() {
-        int result = getAuthenticatiorString() != null ? getAuthenticatiorString().hashCode() : 0;
+        int result = getAuthenticatorString() != null ? getAuthenticatorString().hashCode() : 0;
         result = 31 * result + (getClientTicketGrantingTicketString() != null ? getClientTicketGrantingTicketString().hashCode() : 0);
         result = 31 * result + (getServerTicketGrantingTicketString() != null ? getServerTicketGrantingTicketString().hashCode() : 0);
         return result;
@@ -91,7 +113,7 @@ public class TicketGrantingServiceRequest implements Serializable {
     @Override
     public String toString() {
         return "TicketGrantingServiceRequest{" +
-                "authenticatiorString='" + authenticatiorString + '\'' +
+                "authenticatorString='" + authenticatorString + '\'' +
                 ", clientTicketGrantingTicketString='" + clientTicketGrantingTicketString + '\'' +
                 ", serverTicketGrantingTicketString='" + serverTicketGrantingTicketString + '\'' +
                 '}';

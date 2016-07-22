@@ -7,6 +7,10 @@ import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
 
+/**
+ * A default {@code SessionKeyFactory } implement. Using {@link SecureRandom} to create a random number and
+ * transform it to byte array using {@link MessageDigest}.
+ */
 public class DefaultSessionKeyFactory implements SessionKeyFactory {
 
     private SecureRandom secureRandom;
@@ -37,6 +41,9 @@ public class DefaultSessionKeyFactory implements SessionKeyFactory {
         return messageDigest;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public byte[] getSessionKey(SessionSettings settings)
             throws NoSuchProviderException, NoSuchAlgorithmException {
         SecureRandom prng = getSecureRandom(settings);

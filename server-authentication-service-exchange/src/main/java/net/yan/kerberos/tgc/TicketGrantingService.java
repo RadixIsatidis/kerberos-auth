@@ -8,10 +8,13 @@ import net.yan.kerberos.userdetails.UserDetails;
 import net.yan.kerberos.userdetails.UserDetailsService;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.security.GeneralSecurityException;
 import java.time.Instant;
-import java.util.Objects;
 
+/**
+ * Class that providing ticket granting service.
+ */
 public class TicketGrantingService {
 
     private UserDetailsService userDetailsService;
@@ -54,15 +57,46 @@ public class TicketGrantingService {
         this.cryptoProvider = cryptoProvider;
     }
 
+    private AuthenticatorVerifyProvider authenticatorVerifyProvider;
+
+    public AuthenticatorVerifyProvider getAuthenticatorVerifyProvider() {
+        if (null == authenticatorVerifyProvider)
+            authenticatorVerifyProvider = new DefaultAuthenticatorVerifyProvider();
+        return authenticatorVerifyProvider;
+    }
+
+    public void setAuthenticatorVerifyProvider(AuthenticatorVerifyProvider authenticatorVerifyProvider) {
+        this.authenticatorVerifyProvider = authenticatorVerifyProvider;
+    }
+
     public TicketGrantingService() {
     }
 
+    /**
+     * Load user details using username.
+     *
+     * @param username username.
+     * @return user details
+     * @see UserDetailsService#loadUserByUsername(String)
+     */
     public UserDetails loadUserByUsername(String username) {
         return getUserDetailsService().loadUserByUsername(username);
     }
 
+    /**
+     * Decrypt ticket granting service request.
+     * <p>
+     * Decrypt server/client ticket granting ticket using KDC master key.<br>
+     * Decrypt client authenticator using session witch within the decrypted client ticket granting ticket that belong to this session.
+     *
+     * @param request ticket granting service request.
+     * @return a {@link TicketGrantingServiceRequest} that containing decrypted data.
+     * @throws GeneralSecurityException any security exception.
+     * @throws ClassNotFoundException   class not found.
+     * @see CryptoProvider#encryptObject(Serializable, String)
+     */
     public TicketGrantingServiceRequest assignTicketGrantingServiceRequest(TicketGrantingServiceRequest request)
-            throws GeneralSecurityException, IOException, ClassNotFoundException {
+            throws GeneralSecurityException, ClassNotFoundException {
         String clientTicketGrantingTicketString = request.getClientTicketGrantingTicketString();
         TicketGrantingTicket clientTicketGrantingTicket = getCryptoProvider().decryptObject(clientTicketGrantingTicketString, getKerberosSettings().getMasterKey());
         request.setClientTicketGrantingTicket(clientTicketGrantingTicket);
@@ -71,26 +105,42 @@ public class TicketGrantingService {
         TicketGrantingTicket serverTicketGrantingTicket = getCryptoProvider().decryptObject(serverTicketGrantingTicketString, getKerberosSettings().getMasterKey());
         request.setServerTicketGrantingTicket(serverTicketGrantingTicket);
 
-        String authString = request.getAuthenticatiorString();
+        String authString = request.getAuthenticatorString();
         Authenticator authenticator = getCryptoProvider().decryptObject(authString, clientTicketGrantingTicket.getSessionKey());
         request.setAuthenticator(authenticator);
 
         return request;
     }
 
-    public boolean verifyUserInfo(TicketGrantingTicket clientTicketGrantingTicket, Authenticator authenticator) {
-        long t = clientTicketGrantingTicket.getStartTime() + clientTicketGrantingTicket.getLifeTime();
-        Instant now = Instant.now();
-        Instant after = Instant.ofEpochMilli(t);
-        // TODO  verify user info
-        return now.isBefore(after)
-                && Objects.equals(clientTicketGrantingTicket.getUsername(), authenticator.getUsername());
+    /**
+     * Verify user info.
+     *
+     * @param ticketGrantingTicket client ticket granting ticket.
+     * @param authenticator        client authenticator
+     * @return {@code true} if verify success, {@code false} else.
+     */
+    public boolean verifyAuthenticator(TicketGrantingTicket ticketGrantingTicket, Authenticator authenticator) {
+        return authenticatorVerifyProvider.verify(ticketGrantingTicket, authenticator);
     }
 
-    public String createServerSessionKey() throws GeneralSecurityException {
+    /**
+     * Generate a client-server session key.
+     *
+     * @return session key string.
+     * @throws GeneralSecurityException any security exception.
+     */
+    public String generateServerSessionKey() throws GeneralSecurityException {
         return getSessionKeyProvider().generate();
     }
 
+    /**
+     * Create a server ticket using ticket granting service request.
+     *
+     *
+     * @param request
+     * @return
+     * @throws GeneralSecurityException
+     */
     public ServerTicket createServerTicket(TicketGrantingServiceRequest request) throws GeneralSecurityException {
         ServerTicket serverTicket = new ServerTicket();
         TicketGrantingTicket clientTicketGrantingTicket = request.getClientTicketGrantingTicket();
@@ -100,7 +150,7 @@ public class TicketGrantingService {
         assert (null != serverTicketGrantingTicket);
         assert (null != authenticator);
 
-        String serverSessionKey = createServerSessionKey();
+        String serverSessionKey = generateServerSessionKey();
 
         UserDetails server = loadUserByUsername(serverTicketGrantingTicket.getUsername());
         serverTicket.setUsername(server.getUsername());

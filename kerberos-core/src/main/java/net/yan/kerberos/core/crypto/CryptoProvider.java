@@ -114,8 +114,8 @@ public class CryptoProvider {
      * @throws IOException            any I/O exception.
      * @throws ClassNotFoundException Class of a serialized object cannot be found.
      */
-    private static Object fromString(String s) throws IOException,
-            ClassNotFoundException {
+    private static Object fromString(String s)
+            throws IOException, ClassNotFoundException {
         byte[] data = Base64.getDecoder().decode(s);
         ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(data));
         Object o = ois.readObject();
@@ -145,7 +145,6 @@ public class CryptoProvider {
      * @param key the secret key string.
      * @param <T> type of the object.
      * @return encrypted string.
-     * @throws IOException               any I/O error.
      * @throws InvalidKeySpecException   if the given key specification
      *                                   is inappropriate for this secret-key factory to produce a secret key.
      * @throws KeyException              if the given key is not valid
@@ -169,10 +168,18 @@ public class CryptoProvider {
      * @see CryptoFactory#generateKey(CryptoSettings, String)
      */
     public <T extends Serializable> String encryptObject(T obj, String key)
-            throws IOException, InvalidKeySpecException,
+            throws InvalidKeySpecException,
             KeyException, NoSuchAlgorithmException, NoSuchProviderException,
             NoSuchPaddingException, BadPaddingException, IllegalBlockSizeException {
-        String input = toString(obj);
+        String input;
+        try {
+            input = toString(obj);
+        } catch (IOException e) {
+            log.error(e.getMessage());
+            if (log.isDebugEnabled())
+                log.debug(e.getMessage(), e);
+            input = "";
+        }
         return encryptString(input, _cryptoFactory.generateKey(_settings, key));
     }
 
@@ -183,7 +190,6 @@ public class CryptoProvider {
      * @param key   the secret key string.
      * @param <T>   type of the object.
      * @return an object.
-     * @throws IOException               any I/O exception.
      * @throws ClassNotFoundException    Class of a serialized object cannot be found.
      * @throws InvalidKeySpecException   if the given key specification
      *                                   is inappropriate for this secret-key factory to produce a secret key.
@@ -206,12 +212,19 @@ public class CryptoProvider {
      */
     @SuppressWarnings("unchecked")
     public <T extends Serializable> T decryptObject(String input, String key)
-            throws IOException, ClassNotFoundException,
+            throws ClassNotFoundException,
             InvalidKeySpecException, KeyException,
             NoSuchAlgorithmException, NoSuchProviderException,
             NoSuchPaddingException, BadPaddingException, IllegalBlockSizeException {
         String output = decryptString(input, _cryptoFactory.generateKey(_settings, key));
-        return (T) fromString(output);
+        try {
+            return (T) fromString(output);
+        } catch (IOException e) {
+            log.error(e.getMessage());
+            if (log.isDebugEnabled())
+                log.debug(e.getMessage(), e);
+            return null;
+        }
     }
 
     /**

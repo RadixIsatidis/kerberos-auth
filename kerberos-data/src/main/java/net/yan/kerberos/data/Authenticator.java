@@ -2,15 +2,31 @@ package net.yan.kerberos.data;
 
 import java.io.Serializable;
 
+/**
+ * Class that providing client info witch using to create {@link ServerTicket}
+ */
 public class Authenticator implements Serializable {
 
     private static final long serialVersionUID = 6191995604128272772L;
+
+    /**
+     * the client username.
+     */
     private String username;
 
+    /**
+     * the client address.
+     */
     private String address;
 
+    /**
+     * create time.
+     */
     private Long startTime;
 
+    /**
+     * life time.
+     */
     private Long lifeTime;
 
     public String getUsername() {

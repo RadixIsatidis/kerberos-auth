@@ -87,7 +87,7 @@ public class TicketGrantingClient {
         authenticator.setLifeTime(getClientSettings().getSessionLifeTime());
 
         TicketGrantingServiceRequest request = new TicketGrantingServiceRequest();
-        request.setAuthenticatiorString(getCryptoProvider().encryptObject(authenticator, getSessionKeyCache().get(TICKET_GRANTING_SERVER)));
+        request.setAuthenticatorString(getCryptoProvider().encryptObject(authenticator, getSessionKeyCache().get(TICKET_GRANTING_SERVER)));
         request.setClientTicketGrantingTicketString(getTicketGrantingTicketCache().get(TICKET_GRANTING_SERVER));
         request.setServerTicketGrantingTicketString(getTicketGrantingTicketCache().get(serverName));
         return request;

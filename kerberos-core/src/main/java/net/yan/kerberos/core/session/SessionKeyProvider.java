@@ -3,6 +3,9 @@ package net.yan.kerberos.core.session;
 
 import java.security.GeneralSecurityException;
 
+/**
+ * Class that providing session key generation service.
+ */
 public class SessionKeyProvider {
 
     private final SessionSettings _settings;
@@ -55,6 +58,12 @@ public class SessionKeyProvider {
         return out;
     }
 
+    /**
+     * Generate a session key.
+     *
+     * @return session key string
+     * @throws GeneralSecurityException any security exception.
+     */
     public String generate() throws GeneralSecurityException {
         SessionKeyFactory provider = _settings.getSessionKeyFactory();
         return new String(encodeHex(provider.getSessionKey(_settings), DIGITS_UPPER));

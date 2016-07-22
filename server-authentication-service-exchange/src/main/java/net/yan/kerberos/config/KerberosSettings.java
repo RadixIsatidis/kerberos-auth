@@ -1,13 +1,23 @@
 package net.yan.kerberos.config;
 
+/**
+ * Providing core settings.
+ */
 public interface KerberosSettings {
 
+    /**
+     * @return session life-time
+     */
     Long getSessionLifeTime();
 
+    /**
+     * @return Ticket granting server address.
+     */
+    String getTicketGrantingServerName();
 
-    String getTicketGrantServerName();
-
-
+    /**
+     * @return KDC master key
+     */
     String getMasterKey();
 
 }

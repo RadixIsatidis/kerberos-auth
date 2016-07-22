@@ -3,18 +3,31 @@ package net.yan.kerberos.data;
 import java.io.Serializable;
 
 /**
- * Authentication service request body <br>
+ * AS-Exchange request
  */
 public class AuthenticationServiceRequest implements Serializable {
 
 
     private static final long serialVersionUID = -6251893431985394618L;
+
+    /**
+     * Client username
+     */
     private String username;
 
+    /**
+     * Client address
+     */
     private String address;
 
+    /**
+     * Create time
+     */
     private Long startTime;
 
+    /**
+     * Life time
+     */
     private Long lifeTime;
 
     public String getUsername() {

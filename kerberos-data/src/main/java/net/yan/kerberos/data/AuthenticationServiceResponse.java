@@ -2,14 +2,26 @@ package net.yan.kerberos.data;
 
 import java.io.Serializable;
 
+/**
+ * AS-Exchange response.
+ */
 public class AuthenticationServiceResponse implements Serializable {
 
     private static final long serialVersionUID = -812429616542585542L;
 
+    /**
+     * Encrypted {@link TicketGrantingTicket} string witch belong to current session.
+     */
     private String ticketGrantingTicket;
 
+    /**
+     * Session key witch belong to current session.
+     */
     private String sessionKey;
 
+    /**
+     * The ticket granting server address.
+     */
     private String ticketGrantingServerName;
 
     public String getTicketGrantingTicket() {

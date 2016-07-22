@@ -78,7 +78,7 @@ public class TicketGrantingServiceTest extends DefaultSettingsTest {
             String server = authenticationService.encryptTicketGrantingTicket(serverTicketGrantingTicket);
             ticketGrantingServiceRequest.setServerTicketGrantingTicketString(server);
 
-            ticketGrantingServiceRequest.setAuthenticatiorString(cryptoProvider.encryptObject(authenticator, clientTicketGrantingTicket.getSessionKey()));
+            ticketGrantingServiceRequest.setAuthenticatorString(cryptoProvider.encryptObject(authenticator, clientTicketGrantingTicket.getSessionKey()));
         }
 
     }
@@ -104,7 +104,7 @@ public class TicketGrantingServiceTest extends DefaultSettingsTest {
 
     @Test
     public void verifyUserInfo() throws Exception {
-        assertTrue(tgs.verifyUserInfo(clientTicketGrantingTicket, authenticator));
+        assertTrue(tgs.verifyAuthenticator(clientTicketGrantingTicket, authenticator));
     }
 
     @Test
