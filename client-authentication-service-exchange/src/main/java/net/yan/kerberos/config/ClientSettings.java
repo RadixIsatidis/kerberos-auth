@@ -6,4 +6,6 @@ public interface ClientSettings {
     Long getSessionLifeTime();
 
     String getMasterKey();
+
+    int getRetryTimes();
 }
