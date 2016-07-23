@@ -9,8 +9,8 @@ import net.yan.kerberos.core.KerberosException;
 import net.yan.kerberos.core.secure.CipherProvider;
 import net.yan.kerberos.data.AuthenticationServiceResponse;
 import net.yan.kerberos.data.TicketGrantingTicket;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -27,7 +27,7 @@ import java.util.function.Function;
  */
 public class ClientHelper {
 
-    private static final Log log = LogFactory.getLog(ClientHelper.class);
+    private static final Logger log = LoggerFactory.getLogger(ClientHelper.class);
 
     private static final String TICKET_GRANTING_SERVER = "$$TICKET_GRANTING_SERVER";
 

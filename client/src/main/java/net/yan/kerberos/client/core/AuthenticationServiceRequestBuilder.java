@@ -34,8 +34,9 @@ public class AuthenticationServiceRequestBuilder {
         return clientSettings;
     }
 
-    public void setClientSettings(ClientSettings clientSettings) {
+    public AuthenticationServiceRequestBuilder setClientSettings(ClientSettings clientSettings) {
         this.clientSettings = clientSettings;
+        return this;
     }
 
     public AuthenticationServiceRequest build() {

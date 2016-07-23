@@ -1,7 +1,7 @@
 package net.yan.kerberos.kdc.tgc;
 
-import net.yan.kerberos.kdc.config.DefaultSettingsTest;
 import net.yan.kerberos.data.*;
+import net.yan.kerberos.kdc.config.DefaultSettingsTest;
 import net.yan.kerberos.kdc.userdetails.UserDetails;
 import org.junit.Before;
 import org.junit.Test;

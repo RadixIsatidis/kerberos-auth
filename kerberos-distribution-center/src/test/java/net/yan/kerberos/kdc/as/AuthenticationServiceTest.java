@@ -1,9 +1,9 @@
 package net.yan.kerberos.kdc.as;
 
-import net.yan.kerberos.kdc.config.DefaultSettingsTest;
 import net.yan.kerberos.data.AuthenticationServiceRequest;
 import net.yan.kerberos.data.AuthenticationServiceResponse;
 import net.yan.kerberos.data.TicketGrantingTicket;
+import net.yan.kerberos.kdc.config.DefaultSettingsTest;
 import net.yan.kerberos.kdc.userdetails.UserDetails;
 import org.junit.Before;
 import org.junit.Test;

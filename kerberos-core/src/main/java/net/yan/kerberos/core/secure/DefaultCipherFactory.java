@@ -1,8 +1,8 @@
 package net.yan.kerberos.core.secure;
 
 import com.google.common.base.Strings;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.crypto.Cipher;
 import javax.crypto.NoSuchPaddingException;
@@ -16,7 +16,7 @@ import java.security.spec.KeySpec;
 
 public class DefaultCipherFactory implements CipherFactory {
 
-    private static final Log log = LogFactory.getLog(DefaultCipherFactory.class);
+    private static final Logger log = LoggerFactory.getLogger(DefaultCipherFactory.class);
 
     /**
      * {@inheritDoc}
