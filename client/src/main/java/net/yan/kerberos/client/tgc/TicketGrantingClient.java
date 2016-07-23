@@ -1,12 +1,13 @@
 package net.yan.kerberos.client.tgc;
 
+import net.yan.kerberos.core.KerberosCryptoException;
 import net.yan.kerberos.core.KerberosException;
 import net.yan.kerberos.core.secure.CipherProvider;
 import net.yan.kerberos.data.Authenticator;
 import net.yan.kerberos.data.TicketGrantingServiceRequest;
 import net.yan.kerberos.data.TicketGrantingServiceResponse;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.security.GeneralSecurityException;
 import java.util.function.Function;
@@ -14,7 +15,7 @@ import java.util.function.Supplier;
 
 public class TicketGrantingClient {
 
-    private static final Log log = LogFactory.getLog(TicketGrantingClient.class);
+    private static final Logger log = LoggerFactory.getLogger(TicketGrantingClient.class);
 
     /**
      * Encrypt/Decrypt provider.
@@ -50,9 +51,14 @@ public class TicketGrantingClient {
         this.ticketGrantingServiceRequestFunction = ticketGrantingServiceRequestFunction;
     }
 
-    private String decrypt(String string, String rootSessionKey)
+    private String decrypt(String key, String secret)
             throws ClassNotFoundException, GeneralSecurityException {
-        return getCipherProvider().decryptObject(string, rootSessionKey);
+        return getCipherProvider().decryptString(secret, getCipherProvider().generateKey(key));
+    }
+
+    private String encrypt(Authenticator authenticator, String rootSessionKey)
+            throws GeneralSecurityException {
+        return getCipherProvider().encryptObject(authenticator, rootSessionKey);
     }
 
     /**
@@ -69,14 +75,19 @@ public class TicketGrantingClient {
             String rootSessionKey,
             String rootTicket
     ) throws KerberosException {
+        log.info(String.format("Ticket Granting Service Exchange: TGT_SERVER: [%s], SK_TGS: [%s], TGT_TGS:[%s]",
+                serverRootTicket, rootSessionKey, rootTicket));
         // 组Authenticator
         Authenticator authenticator = authenticatorSupplier.get();
+        if (log.isDebugEnabled())
+            log.debug("Create client Authenticator: " + authenticator);
         String encryptedAuth;
         try {
-            encryptedAuth = getCipherProvider().encryptObject(authenticator, rootSessionKey);
+            encryptedAuth = encrypt(authenticator, rootSessionKey);
+            if (log.isDebugEnabled())
+                log.debug("Encrypted client Authenticator: " + encryptedAuth);
         } catch (GeneralSecurityException e) {
-            log.error(e.getMessage());
-            throw new KerberosException(e);
+            throw new KerberosCryptoException(e);
         }
 
         // get ST
@@ -84,15 +95,20 @@ public class TicketGrantingClient {
         request.setAuthenticatorString(encryptedAuth);
         request.setClientTicketGrantingTicketString(rootTicket);
         request.setServerTicketGrantingTicketString(serverRootTicket);
+        if (log.isDebugEnabled())
+            log.debug("Create TicketGrantingServiceRequest: " + request);
 
         TicketGrantingServiceResponse response = ticketGrantingServiceRequestFunction.apply(request);
+        if (log.isDebugEnabled())
+            log.debug("Receive TicketGrantingServiceResponse: " + response);
 
         String sessionKey;
         try {
-            sessionKey = decrypt(response.getServerSessionKey(), rootSessionKey);
+            sessionKey = decrypt(rootSessionKey, response.getServerSessionKey());
+            if (log.isDebugEnabled())
+                log.debug("Decrypted SK_SERVER: " + sessionKey);
         } catch (ClassNotFoundException | GeneralSecurityException e) {
-            log.error(e.getMessage());
-            throw new KerberosException(e);
+            throw new KerberosCryptoException(e);
         }
 
         TicketGrantingServiceResponseWrapper wrapper = new TicketGrantingServiceResponseWrapper();

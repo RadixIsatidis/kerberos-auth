@@ -1,7 +1,7 @@
 package net.yan.kerberos.core.secure;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.crypto.*;
 import java.io.*;
@@ -15,7 +15,7 @@ import java.util.Base64;
  */
 public class CipherProvider {
 
-    private static final Log log = LogFactory.getLog(CipherProvider.class);
+    private static final Logger log = LoggerFactory.getLogger(CipherProvider.class);
 
     private final CipherFactory _cipherFactory;
 
@@ -216,7 +216,11 @@ public class CipherProvider {
             InvalidKeySpecException, KeyException,
             NoSuchAlgorithmException, NoSuchProviderException,
             NoSuchPaddingException, BadPaddingException, IllegalBlockSizeException {
+        if (log.isTraceEnabled())
+            log.trace(String.format("Decrypt object. input:[%s], key:[%s]", input, key));
         String output = decryptString(input, _cipherFactory.generateKey(_settings, key));
+        if (log.isTraceEnabled())
+            log.trace("Decrypt into string: " + output);
         try {
             return (T) fromString(output);
         } catch (IOException e) {

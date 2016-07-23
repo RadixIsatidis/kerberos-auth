@@ -10,7 +10,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>net.yan.kerberos</groupId>
-    <artifactId>server-authentication-service-exchange</artifactId>
+    <artifactId>kerberos-distribution-center</artifactId>
 
     <dependencies>
         <dependency>

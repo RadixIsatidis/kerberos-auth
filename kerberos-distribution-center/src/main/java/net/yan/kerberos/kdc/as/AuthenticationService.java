@@ -1,11 +1,11 @@
 package net.yan.kerberos.kdc.as;
 
-import net.yan.kerberos.kdc.config.KerberosSettings;
 import net.yan.kerberos.core.secure.CipherProvider;
 import net.yan.kerberos.core.session.SessionKeyProvider;
 import net.yan.kerberos.data.AuthenticationServiceRequest;
 import net.yan.kerberos.data.AuthenticationServiceResponse;
 import net.yan.kerberos.data.TicketGrantingTicket;
+import net.yan.kerberos.kdc.config.KerberosSettings;
 import net.yan.kerberos.kdc.userdetails.UserDetails;
 import net.yan.kerberos.kdc.userdetails.UserDetailsService;
 

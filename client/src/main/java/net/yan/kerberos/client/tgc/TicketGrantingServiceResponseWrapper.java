@@ -29,4 +29,31 @@ public class TicketGrantingServiceResponseWrapper {
     public void setServerSessionKey(String serverSessionKey) {
         this.serverSessionKey = serverSessionKey;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof TicketGrantingServiceResponseWrapper)) return false;
+
+        TicketGrantingServiceResponseWrapper wrapper = (TicketGrantingServiceResponseWrapper) o;
+
+        if (getServerTicket() != null ? !getServerTicket().equals(wrapper.getServerTicket()) : wrapper.getServerTicket() != null) return false;
+        return getServerSessionKey() != null ? getServerSessionKey().equals(wrapper.getServerSessionKey()) : wrapper.getServerSessionKey() == null;
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = getServerTicket() != null ? getServerTicket().hashCode() : 0;
+        result = 31 * result + (getServerSessionKey() != null ? getServerSessionKey().hashCode() : 0);
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "TicketGrantingServiceResponseWrapper{" +
+                "serverTicket='" + serverTicket + '\'' +
+                ", serverSessionKey='" + serverSessionKey + '\'' +
+                '}';
+    }
 }

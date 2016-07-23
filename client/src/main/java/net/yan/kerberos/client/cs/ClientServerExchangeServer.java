@@ -1,14 +1,16 @@
 package net.yan.kerberos.client.cs;
 
+import net.yan.kerberos.core.KerberosCryptoException;
 import net.yan.kerberos.core.KerberosException;
 import net.yan.kerberos.core.secure.CipherProvider;
 import net.yan.kerberos.data.Authenticator;
 import net.yan.kerberos.data.ClientServerExchangeRequest;
 import net.yan.kerberos.data.ClientServerExchangeResponse;
 import net.yan.kerberos.data.ServerTicket;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.Serializable;
 import java.security.GeneralSecurityException;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -16,7 +18,7 @@ import java.util.function.Supplier;
 
 public class ClientServerExchangeServer {
 
-    private static final Log log = LogFactory.getLog(ClientServerExchangeServer.class);
+    private static final Logger log = LoggerFactory.getLogger(ClientServerExchangeServer.class);
 
     /**
      * Encrypt/Decrypt provider.
@@ -58,8 +60,13 @@ public class ClientServerExchangeServer {
         this.clientAuthenticatorVerifier = clientAuthenticatorVerifier;
     }
 
-    private Authenticator decrypt(String key, String secret) throws ClassNotFoundException, GeneralSecurityException {
+    @SuppressWarnings("unchecked")
+    private <T> T decrypt(String key, String secret) throws ClassNotFoundException, GeneralSecurityException {
         return getCipherProvider().decryptObject(secret, key);
+    }
+
+    private <T extends Serializable> String encrypt(String key, T secret) throws GeneralSecurityException {
+        return getCipherProvider().encryptObject(secret, key);
     }
 
     private boolean mutualAuthentication(
@@ -68,7 +75,7 @@ public class ClientServerExchangeServer {
     ) throws ServerVerifyException {
         Authenticator authenticator;
         try {
-            authenticator = decrypt(secret, serverSessionKey);
+            authenticator = decrypt(serverSessionKey, secret);
         } catch (ClassNotFoundException | GeneralSecurityException e) {
             throw new ServerVerifyException(e);
         }
@@ -80,15 +87,17 @@ public class ClientServerExchangeServer {
             String serverName,
             String rootSessionKey
     ) throws KerberosException {
+        if (log.isDebugEnabled())
+            log.debug(String.format("Client Server Exchange: REQUEST:[%s], SERVER_NAME: [%s], SK_TGS: [%s]", request, serverName, rootSessionKey));
         String _serverName = request.getServerName();
         if (!Objects.equals(serverName, _serverName)) {
             throw new KerberosException(String.format("Expects server name %s, actual %s", serverName, _serverName));
         }
         ServerTicket serverTicket;
         try {
-            serverTicket = getCipherProvider().decryptObject(request.getServerTicket(), rootSessionKey);
+            serverTicket = decrypt(rootSessionKey, request.getServerTicket());
         } catch (ClassNotFoundException | GeneralSecurityException e) {
-            throw new KerberosException(e);
+            throw new KerberosCryptoException(e);
         }
         String clientSessionKey = serverTicket.getSessionKey();
 
@@ -100,10 +109,9 @@ public class ClientServerExchangeServer {
         Authenticator authenticator = authenticatorSupplier.get();
         String encryptAuth;
         try {
-            encryptAuth = getCipherProvider().encryptObject(authenticator, clientSessionKey);
+            encryptAuth = encrypt(clientSessionKey, authenticator);
         } catch (GeneralSecurityException e) {
-            log.error(e.getMessage());
-            throw new KerberosException(e);
+            throw new KerberosCryptoException(e);
         }
         ClientServerExchangeResponse response = new ClientServerExchangeResponse();
         response.setAuthenticator(encryptAuth);
