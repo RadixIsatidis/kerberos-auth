@@ -1,9 +1,8 @@
-package net.yan.kerberos.data;
+package net.yan.kerberos.client.tgc;
 
-/**
- * TGS-Exchange response
- */
-public class TicketGrantingServiceResponse {
+import net.yan.kerberos.data.ServerTicket;
+
+public class TicketGrantingServiceResponseWrapper {
 
     /**
      * Encrypted {@link ServerTicket}
@@ -11,7 +10,7 @@ public class TicketGrantingServiceResponse {
     private String serverTicket;
 
     /**
-     * Current session key, encrypted by SK_KDC
+     * Current session key
      */
     private String serverSessionKey;
 

@@ -9,12 +9,12 @@
     <packaging>pom</packaging>
     <version>1.0-SNAPSHOT</version>
     <modules>
-        <module>server-authentication-service-exchange</module>
+        <module>kerberos-distribution-center</module>
         <module>client-server-exchange</module>
         <module>kerberos-core</module>
         <module>kerberos-data</module>
         <module>kerberos-annotations</module>
-        <module>client-authentication-service-exchange</module>
+        <module>client</module>
     </modules>
 
     <properties>
