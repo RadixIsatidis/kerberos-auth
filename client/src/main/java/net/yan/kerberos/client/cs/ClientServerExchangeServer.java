@@ -1,7 +1,6 @@
 package net.yan.kerberos.client.cs;
 
 import net.yan.kerberos.core.KerberosCryptoException;
-import net.yan.kerberos.core.KerberosException;
 import net.yan.kerberos.core.secure.CipherProvider;
 import net.yan.kerberos.data.Authenticator;
 import net.yan.kerberos.data.ClientServerExchangeRequest;
@@ -76,6 +75,8 @@ public class ClientServerExchangeServer {
         Authenticator authenticator;
         try {
             authenticator = decrypt(serverSessionKey, secret);
+            if (log.isDebugEnabled())
+                log.debug("Decrypted client Authenticator: " + authenticator);
         } catch (ClassNotFoundException | GeneralSecurityException e) {
             throw new ServerVerifyException(e);
         }
@@ -86,35 +87,43 @@ public class ClientServerExchangeServer {
             ClientServerExchangeRequest request,
             String serverName,
             String rootSessionKey
-    ) throws KerberosException {
+    ) throws ServerVerifyException, KerberosCryptoException {
         if (log.isDebugEnabled())
             log.debug(String.format("Client Server Exchange: REQUEST:[%s], SERVER_NAME: [%s], SK_TGS: [%s]", request, serverName, rootSessionKey));
         String _serverName = request.getServerName();
         if (!Objects.equals(serverName, _serverName)) {
-            throw new KerberosException(String.format("Expects server name %s, actual %s", serverName, _serverName));
+            throw new ServerVerifyException(String.format("Expects server name %s, actual %s", serverName, _serverName));
         }
         ServerTicket serverTicket;
         try {
             serverTicket = decrypt(rootSessionKey, request.getServerTicket());
+            if (log.isDebugEnabled())
+                log.debug("Decrypted ServerTicket: " + serverTicket);
         } catch (ClassNotFoundException | GeneralSecurityException e) {
             throw new KerberosCryptoException(e);
         }
         String clientSessionKey = serverTicket.getSessionKey();
 
         if (!mutualAuthentication(clientSessionKey, request.getAuthenticator())) {
-            throw new ServerVerifyException("Cannot verify client info.");
+            throw new ServerVerifyException("Verify client info failed.");
         }
 
         // 组Authenticator
         Authenticator authenticator = authenticatorSupplier.get();
+        if (log.isDebugEnabled())
+            log.debug("Create server Authenticator: " + authenticator);
         String encryptAuth;
         try {
             encryptAuth = encrypt(clientSessionKey, authenticator);
+            if (log.isDebugEnabled())
+                log.debug("Encrypted server Authenticator: " + authenticator);
         } catch (GeneralSecurityException e) {
             throw new KerberosCryptoException(e);
         }
         ClientServerExchangeResponse response = new ClientServerExchangeResponse();
         response.setAuthenticator(encryptAuth);
+        if (log.isDebugEnabled())
+            log.debug("Create ClientServerExchangeResponse: " + response);
         csExchange.accept(response);
     }
 }
