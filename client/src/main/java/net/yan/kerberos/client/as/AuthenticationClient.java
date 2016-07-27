@@ -13,6 +13,17 @@ import java.security.GeneralSecurityException;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+/**
+ * Class defines api to working with authentication service exchange.
+ * <p>
+ * Class is designed to work without dependence. <br>
+ * It using a {@link #authenticationServiceRequestSupplier} to get a client {@link AuthenticationServiceRequest}
+ * which Authenticator server use to grant a SK_TGT encrypted using client master key and TGT encrypted using SK_TGT. <br>
+ * Class obtain capable of consuming an {@code AuthenticationServiceRequest} and get an encrypted {@link AuthenticationServiceResponse}
+ * via {@link #authenticationServiceRequestFunction}.
+ *
+ * @author yanle
+ */
 public class AuthenticationClient {
 
     private static final Logger log = LoggerFactory.getLogger(AuthenticationClient.class);
