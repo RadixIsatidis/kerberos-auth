@@ -225,3 +225,4 @@ pip-log.txt
 /server-authentication-service-exchange/target
 /client/target
 /kerberos-distribution-center/target
+/examples/target

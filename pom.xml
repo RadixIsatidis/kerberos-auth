@@ -13,6 +13,7 @@
         <module>kerberos-core</module>
         <module>kerberos-data</module>
         <module>client</module>
+        <module>examples</module>
     </modules>
 
     <properties>
