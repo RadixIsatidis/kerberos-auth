@@ -1,2 +1,2 @@
 # kerberos-auth
-A kerberos Authentication implementation
+A kerberos authentication implementation
