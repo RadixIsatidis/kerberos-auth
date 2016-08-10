@@ -98,7 +98,6 @@ public class ClientServerExchangeServerTest {
         server.setCipherProvider(cipherProvider);
         server.setAuthenticatorSupplier(() -> serverAuth);
         server.setClientAuthenticatorVerifier(this::verify);
-        server.setCsExchange(this::csExchange);
 
         server.clientServerExchange(request, SERVER_NAME, SK_TGS);
     }
@@ -110,7 +109,6 @@ public class ClientServerExchangeServerTest {
         server.setCipherProvider(cipherProvider);
         server.setAuthenticatorSupplier(() -> serverAuth);
         server.setClientAuthenticatorVerifier(this::verify);
-        server.setCsExchange(this::csExchange);
 
         try {
             server.clientServerExchange(request, "another server", SK_TGS);
@@ -128,7 +126,6 @@ public class ClientServerExchangeServerTest {
         server.setCipherProvider(cipherProvider);
         server.setAuthenticatorSupplier(() -> serverAuth);
         server.setClientAuthenticatorVerifier(this::verify);
-        server.setCsExchange(this::csExchange);
 
         try {
             server.clientServerExchange(request, SERVER_NAME, "WITH-WRONG-KEY" + SK_TGS);
@@ -147,7 +144,6 @@ public class ClientServerExchangeServerTest {
         server.setCipherProvider(cipherProvider);
         server.setAuthenticatorSupplier(() -> serverAuth);
         server.setClientAuthenticatorVerifier((a, b) -> false);
-        server.setCsExchange(this::csExchange);
 
         try {
             server.clientServerExchange(request, SERVER_NAME, SK_TGS);

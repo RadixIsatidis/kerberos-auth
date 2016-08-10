@@ -6,11 +6,16 @@ import net.yan.kerberos.client.cs.ClientServerExchangeServer;
 import net.yan.kerberos.core.KerberosException;
 import net.yan.kerberos.data.AuthenticationServiceResponse;
 import net.yan.kerberos.data.ClientServerExchangeRequest;
+import net.yan.kerberos.data.ClientServerExchangeResponse;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public class ServerHelper {
+
+    private static final String TGT_KEY = "$$SERVER-TGT-KEY";
+
+    private static final String SESSION_KEY = "$$SERVER-KDC-SESSION-KEY";
 
     /**
      * Client settings.
@@ -40,6 +45,22 @@ public class ServerHelper {
     public void setClientSettings(ClientSettings clientSettings) {
         this.clientSettings = clientSettings;
     }
+
+    public void setAuthenticationClient(AuthenticationClient authenticationClient) {
+        this.authenticationClient = authenticationClient;
+    }
+
+    public void setClientServerExchangeServer(ClientServerExchangeServer clientServerExchangeServer) {
+        this.clientServerExchangeServer = clientServerExchangeServer;
+    }
+
+    public void setCache(CacheProvider cache) {
+        serverTGTSupplier = () -> cache.get(TGT_KEY);
+        serverTGTCache = (s) -> cache.cache(TGT_KEY, s);
+        rootSessionSupplier = () -> cache.get(SESSION_KEY);
+        rootSessionCache = (s) -> cache.cache(SESSION_KEY, s);
+    }
+
 
     /**
      * Get TGT_TGS
@@ -82,8 +103,8 @@ public class ServerHelper {
         return rootTicket;
     }
 
-    public void handShake(ClientServerExchangeRequest request) throws KerberosException {
-        clientServerExchangeServer.clientServerExchange(
+    public ClientServerExchangeResponse handShake(ClientServerExchangeRequest request) throws KerberosException {
+        return clientServerExchangeServer.clientServerExchange(
                 request,
                 getClientSettings().getLocalName(),
                 getRootSessionKey()

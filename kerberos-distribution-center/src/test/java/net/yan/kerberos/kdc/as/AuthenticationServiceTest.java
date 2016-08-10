@@ -34,7 +34,7 @@ public class AuthenticationServiceTest extends DefaultSettingsTest {
 
     @Test
     public void loadUserByUsername() {
-        UserDetails userDetails = authenticationService.loadUserByUsername(request);
+        UserDetails userDetails = authenticationService.loadUserDetails(request);
         assertNotNull(userDetails);
         assertEquals(request.getUsername(), userDetails.getUsername());
     }

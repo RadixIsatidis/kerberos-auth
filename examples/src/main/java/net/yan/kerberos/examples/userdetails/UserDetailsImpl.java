@@ -23,6 +23,9 @@ public class UserDetailsImpl implements UserDetails {
     @Column(name = "password")
     private String password;
 
+    @Column(name = "host")
+    private String host;
+
     public void setUsername(String username) {
         this.username = username;
     }
@@ -59,5 +62,13 @@ public class UserDetailsImpl implements UserDetails {
     @Override
     public boolean isEnabled() {
         return true;
+    }
+
+    public String getHost() {
+        return host;
+    }
+
+    public void setHost(String host) {
+        this.host = host;
     }
 }

@@ -68,7 +68,7 @@ public class AuthenticationService {
      * @return user detail.
      * @see UserDetailsService#loadUserByUsername(String)
      */
-    public UserDetails loadUserByUsername(AuthenticationServiceRequest request) {
+    public UserDetails loadUserDetails(AuthenticationServiceRequest request) {
         return getUserDetailsService().loadUserByUsername(request.getUsername());
     }
 
@@ -98,11 +98,11 @@ public class AuthenticationService {
      * a encrypted {@link TicketGrantingTicket} string, ticket granting server address and session key belong to this session.
      *
      * @param request     a request containing client info.
-     * @param userDetails user detail from {@link #loadUserByUsername(AuthenticationServiceRequest)}
+     * @param userDetails user detail from {@link #loadUserDetails(AuthenticationServiceRequest)}
      * @return a encrypted {@link AuthenticationServiceResponse} string
      * @throws GeneralSecurityException any security exception.
      * @see #encryptTicketGrantingTicket(TicketGrantingTicket)
-     * @see #loadUserByUsername(AuthenticationServiceRequest)
+     * @see #loadUserDetails(AuthenticationServiceRequest)
      * @see #createTicketGrantingTicket(AuthenticationServiceRequest)
      */
     public String createAuthenticationServiceResponse(
@@ -135,7 +135,7 @@ public class AuthenticationService {
      * @return a encrypted {@link AuthenticationServiceResponse} string
      * @throws GeneralSecurityException any security exception.
      * @see #createTicketGrantingTicket(AuthenticationServiceRequest)
-     * @see #loadUserByUsername(AuthenticationServiceRequest)
+     * @see #loadUserDetails(AuthenticationServiceRequest)
      */
     public String createAuthenticationServiceResponse(
             TicketGrantingTicket tgt,

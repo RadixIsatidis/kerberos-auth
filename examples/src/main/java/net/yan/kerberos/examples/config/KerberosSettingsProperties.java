@@ -6,7 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 /**
  * @author yanle
  */
-@ConfigurationProperties(prefix = "kerberos")
+@ConfigurationProperties(prefix = "kerberos.kdc")
 public class KerberosSettingsProperties implements KerberosSettings {
 
     private Long sessionLifeTime;

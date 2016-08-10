@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
 import java.io.Serializable;
 import java.security.GeneralSecurityException;
 import java.util.Objects;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public class ClientServerExchangeServer {
@@ -30,10 +29,8 @@ public class ClientServerExchangeServer {
     private Supplier<Authenticator> authenticatorSupplier;
 
     /**
-     * A {@link ClientServerExchangeResponse} handler
+     * Use to verify client authenticator.
      */
-    private Consumer<ClientServerExchangeResponse> csExchange;
-
     private AuthenticatorVerifyProvider clientAuthenticatorVerifier;
 
 
@@ -49,10 +46,6 @@ public class ClientServerExchangeServer {
 
     public void setAuthenticatorSupplier(Supplier<Authenticator> authenticatorSupplier) {
         this.authenticatorSupplier = authenticatorSupplier;
-    }
-
-    public void setCsExchange(Consumer<ClientServerExchangeResponse> csExchange) {
-        this.csExchange = csExchange;
     }
 
     public void setClientAuthenticatorVerifier(AuthenticatorVerifyProvider clientAuthenticatorVerifier) {
@@ -83,7 +76,7 @@ public class ClientServerExchangeServer {
         return clientAuthenticatorVerifier.verify(authenticator.getUsername(), authenticator);
     }
 
-    public void clientServerExchange(
+    public ClientServerExchangeResponse clientServerExchange(
             ClientServerExchangeRequest request,
             String serverName,
             String rootSessionKey
@@ -126,6 +119,6 @@ public class ClientServerExchangeServer {
         response.setAuthenticator(encryptAuth);
         if (log.isDebugEnabled())
             log.debug("Create ClientServerExchangeResponse: " + response);
-        csExchange.accept(response);
+        return response;
     }
 }

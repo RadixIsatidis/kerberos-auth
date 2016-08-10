@@ -1,6 +1,7 @@
 package net.yan.kerberos.examples.config;
 
 import net.yan.kerberos.core.session.DefaultSessionKeyFactory;
+import net.yan.kerberos.core.session.DefaultSessionSettings;
 import net.yan.kerberos.core.session.SessionKeyFactory;
 import net.yan.kerberos.core.session.SessionSettings;
 import org.slf4j.Logger;
@@ -11,7 +12,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @author yanle
  */
 @ConfigurationProperties(prefix = "session")
-public class SessionSettingsProperties implements SessionSettings {
+public class SessionSettingsProperties extends DefaultSessionSettings {
 
     private static final Logger logger = LoggerFactory.getLogger(SessionSettingsProperties.class);
 
