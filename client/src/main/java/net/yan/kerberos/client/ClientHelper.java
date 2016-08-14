@@ -18,9 +18,9 @@ import java.util.function.Function;
 
 /**
  * A client to performing sub-protocols:<br>
- * 1. Authentication service exchange. <br>
- * 2. Ticket granting service exchange. <br>
- * 3. Client-Server exchange <br>
+ * 1. Authentication service exchange. {@link #getRootSessionKey()} -&gt; {@link #getRootTicket()} <br>
+ * 2. Ticket granting service exchange. {@link #getServerTicket(String)} -&gt; {@link #getServerRootTicket(String)} <br>
+ * 3. Client-Server exchange  {@link #getServerSessionKey(String)}<br>
  * <p>
  * The client will not using a specific method to processing the certification and authorization request,
  * instead, it handles the request/response data only.<br>

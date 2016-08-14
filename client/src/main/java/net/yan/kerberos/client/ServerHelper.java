@@ -11,6 +11,9 @@ import net.yan.kerberos.data.ClientServerExchangeResponse;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+/**
+ * A server side helper.
+ */
 public class ServerHelper {
 
     private static final String TGT_KEY = "$$SERVER-TGT-KEY";
@@ -22,9 +25,14 @@ public class ServerHelper {
      */
     private ClientSettings clientSettings;
 
-
+    /**
+     * Using to request server-side TGT
+     */
     private AuthenticationClient authenticationClient;
 
+    /**
+     * Using to authenticate client.
+     */
     private ClientServerExchangeServer clientServerExchangeServer;
 
     /**
@@ -32,10 +40,19 @@ public class ServerHelper {
      */
     private Supplier<String> serverTGTSupplier;
 
+    /**
+     * Using to cache TGT_SERVER
+     */
     private Consumer<String> serverTGTCache;
 
+    /**
+     * Using to cache SK_TGS
+     */
     private Supplier<String> rootSessionSupplier;
 
+    /**
+     * Using to cache SK_TGS
+     */
     private Consumer<String> rootSessionCache;
 
     public ClientSettings getClientSettings() {
@@ -66,7 +83,7 @@ public class ServerHelper {
      * Get TGT_TGS
      *
      * @return TGT
-     * @throws KerberosException
+     * @throws KerberosException any exception.
      */
     public String getRootSessionKey() throws KerberosException {
         String rootSessionKey = rootSessionSupplier.get();
@@ -88,7 +105,7 @@ public class ServerHelper {
      * Get TGT
      *
      * @return ticket granting ticket.
-     * @throws KerberosException
+     * @throws KerberosException any exception
      */
     public String getRootTicket() throws KerberosException {
         String rootTicket = serverTGTSupplier.get();
@@ -103,6 +120,13 @@ public class ServerHelper {
         return rootTicket;
     }
 
+    /**
+     * Hand shake with client.
+     *
+     * @param request request
+     * @return response
+     * @throws KerberosException any exception.
+     */
     public ClientServerExchangeResponse handShake(ClientServerExchangeRequest request) throws KerberosException {
         return clientServerExchangeServer.clientServerExchange(
                 request,
