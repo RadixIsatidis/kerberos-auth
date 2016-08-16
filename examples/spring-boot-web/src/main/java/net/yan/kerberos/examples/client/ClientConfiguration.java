@@ -1,6 +1,7 @@
 package net.yan.kerberos.examples.client;
 
 import net.yan.kerberos.client.ClientHelper;
+import net.yan.kerberos.client.ClientHelperImpl;
 import net.yan.kerberos.client.as.AuthenticationClient;
 import net.yan.kerberos.client.cs.ClientServerExchangeClient;
 import net.yan.kerberos.client.tgc.TicketGrantingClient;
@@ -67,7 +68,7 @@ public class ClientConfiguration {
             ClientServerExchangeClient clientServerExchangeClient,
             AuthenticationServerDao authenticationServerDao
     ) {
-        ClientHelper clientHelper = new ClientHelper();
+        ClientHelperImpl clientHelper = new ClientHelperImpl();
         clientHelper.setAuthenticationClient(client);
         clientHelper.setClientSettings(clientProperties);
         clientHelper.setCipherProvider(cipherProvider);

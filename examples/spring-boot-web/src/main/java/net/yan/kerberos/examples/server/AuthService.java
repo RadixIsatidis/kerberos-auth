@@ -13,8 +13,12 @@ import org.springframework.stereotype.Service;
 @Service("SERVER")
 public class AuthService {
 
+    private final ServerHelper serverHelper;
+
     @Autowired
-    private ServerHelper serverHelper;
+    public AuthService(ServerHelper serverHelper) {
+        this.serverHelper = serverHelper;
+    }
 
 
     public String getTGT() throws KerberosException {

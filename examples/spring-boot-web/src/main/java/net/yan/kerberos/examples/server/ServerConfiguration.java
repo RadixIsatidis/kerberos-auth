@@ -2,6 +2,7 @@ package net.yan.kerberos.examples.server;
 
 import net.yan.kerberos.client.CacheProvider;
 import net.yan.kerberos.client.ServerHelper;
+import net.yan.kerberos.client.ServerHelperImpl;
 import net.yan.kerberos.client.as.AuthenticationClient;
 import net.yan.kerberos.client.cs.AuthenticatorVerifyProvider;
 import net.yan.kerberos.client.cs.ClientServerExchangeServer;
@@ -62,7 +63,7 @@ public class ServerConfiguration {
             @Qualifier("serverAuthenticationClient") AuthenticationClient authenticationClient,
             ClientServerExchangeServer clientServerExchangeServer
     ) {
-        ServerHelper helper = new ServerHelper();
+        ServerHelperImpl helper = new ServerHelperImpl();
         helper.setClientSettings(serverProperties);
         helper.setAuthenticationClient(authenticationClient);
         helper.setClientServerExchangeServer(clientServerExchangeServer);

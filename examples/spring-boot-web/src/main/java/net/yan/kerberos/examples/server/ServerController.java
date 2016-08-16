@@ -23,8 +23,12 @@ public class ServerController {
 
     private static final Logger logger = LoggerFactory.getLogger(ServerController.class);
 
+    private final AuthService authService;
+
     @Autowired
-    private AuthService authService;
+    public ServerController(AuthService authService) {
+        this.authService = authService;
+    }
 
 
     @RequestMapping(value = "tgt", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)

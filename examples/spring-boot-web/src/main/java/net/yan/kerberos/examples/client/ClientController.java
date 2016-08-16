@@ -19,8 +19,12 @@ public class ClientController {
 
     private static final Logger logger = LoggerFactory.getLogger(ClientController.class);
 
+    private final AuthService authService;
+
     @Autowired
-    private AuthService authService;
+    public ClientController(AuthService authService) {
+        this.authService = authService;
+    }
 
     @RequestMapping("session/{name}")
     public ResponseEntity<String> getSessionKey(@PathVariable("name") String name) {

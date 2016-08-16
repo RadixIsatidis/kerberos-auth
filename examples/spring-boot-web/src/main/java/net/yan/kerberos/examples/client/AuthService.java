@@ -12,8 +12,12 @@ import org.springframework.stereotype.Service;
 @Service("CLIENT")
 public class AuthService {
 
+    private final ClientHelper clientHelper;
+
     @Autowired
-    private ClientHelper clientHelper;
+    public AuthService(ClientHelper clientHelper) {
+        this.clientHelper = clientHelper;
+    }
 
 
     public String getSessionKey(String server) throws KerberosException {
