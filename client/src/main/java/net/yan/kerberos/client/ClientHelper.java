@@ -1,6 +1,7 @@
 package net.yan.kerberos.client;
 
 import net.yan.kerberos.core.KerberosException;
+import rx.Observable;
 
 /**
  * @author yanle
@@ -11,15 +12,13 @@ public interface ClientHelper {
      *
      * @param serverName the server name.
      * @return session key.
-     * @throws KerberosException any exception.
      */
-    String getServerSessionKey(String serverName) throws KerberosException;
+    Observable<String> getServerSessionKey(String serverName);
 
     /**
      * Hand shake with server.
      *
      * @param serverName server name
-     * @throws KerberosException any exception.
      */
-    void handShake(String serverName) throws KerberosException;
+    Observable<String> handShake(String serverName);
 }

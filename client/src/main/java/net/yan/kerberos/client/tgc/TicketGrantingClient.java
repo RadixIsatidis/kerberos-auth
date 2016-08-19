@@ -8,6 +8,8 @@ import net.yan.kerberos.data.TicketGrantingServiceRequest;
 import net.yan.kerberos.data.TicketGrantingServiceResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import rx.Observable;
+import rx.exceptions.Exceptions;
 
 import java.security.GeneralSecurityException;
 import java.util.function.Function;
@@ -63,57 +65,66 @@ public class TicketGrantingClient {
 
     /**
      * Ticket granting service exchange.
+     * <p>
+     * Will throw {@link KerberosException} if any exception.
      *
      * @param serverRootTicket TGT_SERVER
      * @param rootSessionKey   SK_KDC
      * @param rootTicket       TGT_KDC
      * @return ticket granting service exchange response.
-     * @throws KerberosException
      */
-    public TicketGrantingServiceResponseWrapper ticketGrantingServiceExchange(
+    public Observable<TicketGrantingServiceResponseWrapper> ticketGrantingServiceExchange(
             String serverRootTicket,
             String rootSessionKey,
             String rootTicket
-    ) throws KerberosException {
-        log.info(String.format("Ticket Granting Service Exchange: TGT_SERVER: [%s], SK_TGS: [%s], TGT_TGS:[%s]",
-                serverRootTicket, rootSessionKey, rootTicket));
-        // 组Authenticator
-        Authenticator authenticator = authenticatorSupplier.get();
-        if (log.isDebugEnabled())
-            log.debug("Create client Authenticator: " + authenticator);
-        String encryptedAuth;
-        try {
-            encryptedAuth = encrypt(authenticator, rootSessionKey);
+    ) {
+        return Observable.create((Observable.OnSubscribe<Authenticator>) subscriber -> {
+            log.info(String.format("Ticket Granting Service Exchange: TGT_SERVER: [%s], SK_TGS: [%s], TGT_TGS:[%s]",
+                    serverRootTicket, rootSessionKey, rootTicket));
+            // 组Authenticator
+            Authenticator authenticator = authenticatorSupplier.get();
             if (log.isDebugEnabled())
-                log.debug("Encrypted client Authenticator: " + encryptedAuth);
-        } catch (GeneralSecurityException e) {
-            throw new KerberosCryptoException(e);
-        }
+                log.debug("Create client Authenticator: " + authenticator);
 
-        // get ST
-        TicketGrantingServiceRequest request = new TicketGrantingServiceRequest();
-        request.setAuthenticatorString(encryptedAuth);
-        request.setClientTicketGrantingTicketString(rootTicket);
-        request.setServerTicketGrantingTicketString(serverRootTicket);
-        if (log.isDebugEnabled())
-            log.debug("Create TicketGrantingServiceRequest: " + request);
-
-        TicketGrantingServiceResponse response = ticketGrantingServiceRequestFunction.apply(request);
-        if (log.isDebugEnabled())
-            log.debug("Receive TicketGrantingServiceResponse: " + response);
-
-        String sessionKey;
-        try {
-            sessionKey = decrypt(rootSessionKey, response.getServerSessionKey());
+            subscriber.onNext(authenticator);
+            subscriber.onCompleted();
+        }).map(authenticator -> {
+            String encryptedAuth;
+            try {
+                encryptedAuth = encrypt(authenticator, rootSessionKey);
+                if (log.isDebugEnabled())
+                    log.debug("Encrypted client Authenticator: " + encryptedAuth);
+                return encryptedAuth;
+            } catch (GeneralSecurityException e) {
+                throw Exceptions.propagate(new KerberosCryptoException(e));
+            }
+        }).map(encryptedAuth -> {
+            // get ST
+            TicketGrantingServiceRequest request = new TicketGrantingServiceRequest();
+            request.setAuthenticatorString(encryptedAuth);
+            request.setClientTicketGrantingTicketString(rootTicket);
+            request.setServerTicketGrantingTicketString(serverRootTicket);
             if (log.isDebugEnabled())
-                log.debug("Decrypted SK_SERVER: " + sessionKey);
-        } catch (ClassNotFoundException | GeneralSecurityException e) {
-            throw new KerberosCryptoException(e);
-        }
+                log.debug("Create TicketGrantingServiceRequest: " + request);
 
-        TicketGrantingServiceResponseWrapper wrapper = new TicketGrantingServiceResponseWrapper();
-        wrapper.setServerSessionKey(sessionKey);
-        wrapper.setServerTicket(response.getServerTicket());
-        return wrapper;
+            TicketGrantingServiceResponse response = ticketGrantingServiceRequestFunction.apply(request);
+            if (log.isDebugEnabled())
+                log.debug("Receive TicketGrantingServiceResponse: " + response);
+            return response;
+        }).map(response -> {
+            String sessionKey;
+            try {
+                sessionKey = decrypt(rootSessionKey, response.getServerSessionKey());
+                if (log.isDebugEnabled())
+                    log.debug("Decrypted SK_SERVER: " + sessionKey);
+            } catch (ClassNotFoundException | GeneralSecurityException e) {
+                throw Exceptions.propagate(new KerberosCryptoException(e));
+            }
+
+            TicketGrantingServiceResponseWrapper wrapper = new TicketGrantingServiceResponseWrapper();
+            wrapper.setServerSessionKey(sessionKey);
+            wrapper.setServerTicket(response.getServerTicket());
+            return wrapper;
+        });
     }
 }

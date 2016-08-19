@@ -1,7 +1,6 @@
 package net.yan.kerberos.client.cs;
 
 import net.yan.kerberos.client.AbstractClientTest;
-import net.yan.kerberos.core.KerberosCryptoException;
 import net.yan.kerberos.data.Authenticator;
 import net.yan.kerberos.data.ClientServerExchangeRequest;
 import net.yan.kerberos.data.ClientServerExchangeResponse;
@@ -14,6 +13,9 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import rx.exceptions.Exceptions;
 
 import java.security.GeneralSecurityException;
 import java.time.Instant;
@@ -24,6 +26,8 @@ import static org.junit.Assert.*;
 @PowerMockIgnore({"javax.crypto.*"})
 @PrepareForTest(ClientServerExchangeClient.class)
 public class ClientServerExchangeClientTest extends AbstractClientTest {
+
+    private static final Logger logger = LoggerFactory.getLogger(ClientServerExchangeServerTest.class);
 
     String SERVER_NAME = "SERVER_NAME";
 
@@ -84,7 +88,11 @@ public class ClientServerExchangeClientTest extends AbstractClientTest {
             return true;
         });
 
-        client.clientServerExchange(SERVER_NAME, SERVER_SESSION_KEY, SERVER_TICKET);
+        client.clientServerExchange(SERVER_NAME, SERVER_SESSION_KEY, SERVER_TICKET).subscribe((v) -> {
+        }, (e) -> {
+            logger.error(e.getLocalizedMessage(), e);
+            fail(e.getMessage());
+        });
     }
 
     @Test
@@ -98,7 +106,11 @@ public class ClientServerExchangeClientTest extends AbstractClientTest {
             return true;
         });
 
-        client.clientServerExchange(SERVER_NAME, SERVER_SESSION_KEY, SERVER_TICKET);
+        client.clientServerExchange(SERVER_NAME, SERVER_SESSION_KEY, SERVER_TICKET).subscribe((v) -> {
+        }, (e) -> {
+            logger.error(e.getLocalizedMessage(), e);
+            fail(e.getMessage());
+        });
     }
 
     @Test
@@ -112,13 +124,15 @@ public class ClientServerExchangeClientTest extends AbstractClientTest {
         Mockito.doReturn(Boolean.FALSE).when(verifyProvider).verify(Matchers.anyString(), Matchers.any(Authenticator.class));
         client.setServerAuthenticatorVerifier(verifyProvider);
 
-        try {
-            client.clientServerExchange(SERVER_NAME, SERVER_SESSION_KEY, SERVER_TICKET);
-            fail("Must throw ServerVerifyException.");
-        } catch (ServerVerifyException e) {
-            assertEquals("Cannot verify server info:" + SERVER_NAME, e.getMessage());
-        }
-        Mockito.verify(verifyProvider, Mockito.times(1)).verify(Mockito.anyString(), Mockito.any(Authenticator.class));
+        client.clientServerExchange(SERVER_NAME, SERVER_SESSION_KEY, SERVER_TICKET)
+                .subscribe((v) -> fail("Must throw ServerVerifyException."), (e) -> {
+                    assertEquals("Cannot verify server info:" + SERVER_NAME, e.getCause().getMessage());
+                    try {
+                        Mockito.verify(verifyProvider, Mockito.times(1)).verify(Mockito.anyString(), Mockito.any(Authenticator.class));
+                    } catch (ServerVerifyException e1) {
+                        throw Exceptions.propagate(e1);
+                    }
+                });
     }
 
     @Test
@@ -134,14 +148,18 @@ public class ClientServerExchangeClientTest extends AbstractClientTest {
         Mockito.doReturn(Boolean.FALSE).when(verifyProvider).verify(Matchers.anyString(), Matchers.any(Authenticator.class));
         client.setServerAuthenticatorVerifier(verifyProvider);
 
-        try {
-            client.clientServerExchange(SERVER_NAME, "shot", SERVER_TICKET);
+        ClientServerExchangeClient finalClient = client;
+        client.clientServerExchange(SERVER_NAME, "shot", SERVER_TICKET).subscribe((v) -> {
             fail("Must throw KerberosCryptoException.");
-        } catch (KerberosCryptoException e) {
-            GeneralSecurityException ex = (GeneralSecurityException) e.getCause();
+        }, (e) -> {
+            GeneralSecurityException ex = (GeneralSecurityException) e.getCause().getCause();
             assertNotNull(ex);
-        }
-        PowerMockito.verifyPrivate(client, Mockito.times(0)).invoke("mutualAuthentication", Matchers.anyString(), Matchers.anyString(), Matchers.anyString());
+            try {
+                PowerMockito.verifyPrivate(finalClient, Mockito.times(0)).invoke("mutualAuthentication", Matchers.anyString(), Matchers.anyString(), Matchers.anyString());
+            } catch (Exception e1) {
+                throw Exceptions.propagate(e1);
+            }
+        });
     }
 
     @Test
@@ -157,16 +175,24 @@ public class ClientServerExchangeClientTest extends AbstractClientTest {
         PowerMockito.when(verifyProvider.verify(Matchers.anyString(), Matchers.any(Authenticator.class)))
                 .thenReturn(false);
         client.setServerAuthenticatorVerifier(verifyProvider);
-        try {
-            client.clientServerExchange(SERVER_NAME, "incorrect session key, hope it long enough.", SERVER_TICKET);
+        ClientServerExchangeClient finalClient = client;
+        client.clientServerExchange(SERVER_NAME, "incorrect session key, hope it long enough.", SERVER_TICKET).subscribe((v) -> {
             fail("Must throw ServerVerifyException.");
-        } catch (ServerVerifyException e) {
+        }, (e) -> {
             GeneralSecurityException ex = (GeneralSecurityException) e.getCause();
             assertNotNull(ex);
-        }
 
-        PowerMockito.verifyPrivate(client).invoke("mutualAuthentication", Matchers.anyString(), Matchers.anyString(), Matchers.anyString());
-        Mockito.verify(verifyProvider, Mockito.times(0)).verify(Mockito.anyString(), Mockito.any(Authenticator.class));
+            try {
+                PowerMockito.verifyPrivate(finalClient).invoke("mutualAuthentication", Matchers.anyString(), Matchers.anyString(), Matchers.anyString());
+            } catch (Exception e1) {
+                e1.printStackTrace();
+            }
+            try {
+                Mockito.verify(verifyProvider, Mockito.times(0)).verify(Mockito.anyString(), Mockito.any(Authenticator.class));
+            } catch (ServerVerifyException e1) {
+                throw Exceptions.propagate(e1);
+            }
+        });
     }
 
 }

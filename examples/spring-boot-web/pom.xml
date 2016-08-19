@@ -57,6 +57,11 @@
             <scope>test</scope>
         </dependency>
 
+        <dependency>
+            <groupId>io.jmnarloch</groupId>
+            <artifactId>rxjava-spring-boot-starter</artifactId>
+            <version>1.0.0</version>
+        </dependency>
 
         <dependency>
             <groupId>net.yan.kerberos</groupId>

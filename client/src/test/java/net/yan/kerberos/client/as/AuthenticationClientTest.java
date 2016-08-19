@@ -2,8 +2,6 @@ package net.yan.kerberos.client.as;
 
 import net.yan.kerberos.client.AbstractClientTest;
 import net.yan.kerberos.client.core.AuthenticationServiceRequestBuilder;
-import net.yan.kerberos.core.KerberosCryptoException;
-import net.yan.kerberos.core.KerberosException;
 import net.yan.kerberos.data.AuthenticationServiceRequest;
 import net.yan.kerberos.data.AuthenticationServiceResponse;
 import org.junit.Before;
@@ -16,6 +14,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import rx.exceptions.Exceptions;
 
 import java.security.GeneralSecurityException;
 import java.util.Base64;
@@ -74,8 +73,12 @@ public class AuthenticationClientTest extends AbstractClientTest {
         client.setClientSettings(clientSettings);
         client.setAuthenticationServiceRequestSupplier(this::getAuthenticationServiceRequest);
         client.setAuthenticationServiceRequestFunction(this::resolveRequest);
-        AuthenticationServiceResponse response = client.authenticationServiceExchange();
-        assertEquals(this.response, response);
+        client.authenticationServiceExchange().subscribe(response -> {
+            assertEquals(this.response, response);
+        }, (e) -> {
+            log.error(e.getMessage(), e);
+            fail(e.getMessage());
+        });
     }
 
     @Test
@@ -84,8 +87,13 @@ public class AuthenticationClientTest extends AbstractClientTest {
         client.setClientSettings(clientSettings);
         client.setAuthenticationServiceRequestSupplier(this::getAuthenticationServiceRequest);
         client.setAuthenticationServiceRequestFunction(this::resolveRequest);
-        AuthenticationServiceResponse response = client.authenticationServiceExchange();
-        assertEquals(this.response, response);
+        client.authenticationServiceExchange().subscribe(response -> {
+            assertEquals(this.response, response);
+        }, e -> {
+            log.error(e.getMessage(), e);
+            fail(e.getMessage());
+        });
+
     }
 
     @Test
@@ -97,14 +105,18 @@ public class AuthenticationClientTest extends AbstractClientTest {
         client.setClientSettings(clientSettings);
         client.setAuthenticationServiceRequestSupplier(this::getAuthenticationServiceRequest);
         client.setAuthenticationServiceRequestFunction((s) -> Base64.getEncoder().encodeToString("error string....".getBytes()));
-        try {
-            client.authenticationServiceExchange();
+        AuthenticationClient finalClient = client;
+        client.authenticationServiceExchange().subscribe(s -> {
             fail("Must throw KerberosException");
-        } catch (KerberosCryptoException e) {
+        }, e -> {
             log.info("Catch exception: " + e.getMessage());
-            GeneralSecurityException ex = (GeneralSecurityException) e.getCause();
+            GeneralSecurityException ex = (GeneralSecurityException) e.getCause().getCause();
             assertNotNull(ex);
-        }
-        PowerMockito.verifyPrivate(client).invoke("decrypt", Matchers.anyString());
+            try {
+                PowerMockito.verifyPrivate(finalClient).invoke("decrypt", Matchers.anyString());
+            } catch (Exception e1) {
+                throw Exceptions.propagate(e1);
+            }
+        });
     }
 }

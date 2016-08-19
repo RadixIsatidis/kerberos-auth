@@ -2,9 +2,9 @@ package net.yan.kerberos.examples.client;
 
 import net.yan.kerberos.client.ClientHelper;
 import net.yan.kerberos.core.KerberosException;
-import net.yan.kerberos.kdc.userdetails.UserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import rx.Observable;
 
 /**
  * @author yanle
@@ -20,9 +20,9 @@ public class AuthService {
     }
 
 
-    public String getSessionKey(String server) throws KerberosException {
-        String sessionKey = clientHelper.getServerSessionKey(server);
-        clientHelper.handShake(server);
-        return sessionKey;
+    public Observable<String> getSessionKey(String server) throws KerberosException {
+        // String sessionKey = clientHelper.getServerSessionKey(server);
+        return clientHelper.handShake(server);
+//        return sessionKey;
     }
 }

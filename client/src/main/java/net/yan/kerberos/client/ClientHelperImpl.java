@@ -1,16 +1,19 @@
 package net.yan.kerberos.client;
 
+import com.google.common.base.Strings;
 import net.yan.kerberos.client.as.AuthenticationClient;
 import net.yan.kerberos.client.core.ClientSettings;
 import net.yan.kerberos.client.cs.ClientServerExchangeClient;
 import net.yan.kerberos.client.tgc.TicketGrantingClient;
 import net.yan.kerberos.client.tgc.TicketGrantingServiceResponseWrapper;
+import net.yan.kerberos.core.KerberosCryptoException;
 import net.yan.kerberos.core.KerberosException;
-import net.yan.kerberos.core.secure.CipherProvider;
 import net.yan.kerberos.data.AuthenticationServiceResponse;
 import net.yan.kerberos.data.TicketGrantingTicket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import rx.Observable;
+import rx.schedulers.Schedulers;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -34,11 +37,7 @@ public class ClientHelperImpl implements ClientHelper {
     /**
      * Client settings.
      */
-    private ClientSettings clientSettings;
-    /**
-     * Encrypt/Decrypt provider.
-     */
-    private CipherProvider cipherProvider;
+    private final ClientSettings clientSettings;
     /**
      * TGT(Ticket Granting Ticket) cache. Including TGT_TGS and TGT_SERVER
      */
@@ -52,34 +51,20 @@ public class ClientHelperImpl implements ClientHelper {
      */
     private CacheProvider serverTicketCache;
 
-    private AuthenticationClient authenticationClient;
+    private final AuthenticationClient authenticationClient;
 
-    private TicketGrantingClient ticketGrantingClient;
+    private final TicketGrantingClient ticketGrantingClient;
 
-    private ClientServerExchangeClient clientServerExchangeClient;
+    private final ClientServerExchangeClient clientServerExchangeClient;
 
     /**
      * A server {@link TicketGrantingTicket} supplier, can obtain an encrypted server {@code TicketGrantingTicket}
      * string by using the server name.
      */
-    private Function<String, String> serverTicketGrantingTicketFunction;
+    private final Function<String, String> serverTicketGrantingTicketFunction;
 
     public ClientSettings getClientSettings() {
         return clientSettings;
-    }
-
-    public void setClientSettings(ClientSettings clientSettings) {
-        this.clientSettings = clientSettings;
-    }
-
-    public CipherProvider getCipherProvider() {
-        if (null == cipherProvider)
-            cipherProvider = new CipherProvider();
-        return cipherProvider;
-    }
-
-    public void setCipherProvider(CipherProvider cipherProvider) {
-        this.cipherProvider = cipherProvider;
     }
 
     private CacheProvider getInternalCache() {
@@ -105,6 +90,15 @@ public class ClientHelperImpl implements ClientHelper {
         return ticketGrantingTicketCache;
     }
 
+    private Observable<String> getTicketGrantingTicketCache(String key) {
+        return Observable.create(subscriber -> {
+            String serverRootTicket = getTicketGrantingTicketCache().get(key);
+            if (!Strings.isNullOrEmpty(serverRootTicket))
+                subscriber.onNext(serverRootTicket);
+            subscriber.onCompleted();
+        });
+    }
+
     public void setTicketGrantingTicketCache(CacheProvider ticketGrantingTicketCache) {
         this.ticketGrantingTicketCache = ticketGrantingTicketCache;
     }
@@ -113,6 +107,15 @@ public class ClientHelperImpl implements ClientHelper {
         if (null == sessionKeyCache)
             sessionKeyCache = getInternalCache();
         return sessionKeyCache;
+    }
+
+    private Observable<String> getSessionKeyCache(String key) {
+        return Observable.create(subscriber -> {
+            String serverRootTicket = getSessionKeyCache().get(key);
+            if (!Strings.isNullOrEmpty(serverRootTicket))
+                subscriber.onNext(serverRootTicket);
+            subscriber.onCompleted();
+        });
     }
 
     public void setSessionKeyCache(CacheProvider sessionKeyCache) {
@@ -125,43 +128,40 @@ public class ClientHelperImpl implements ClientHelper {
         return serverTicketCache;
     }
 
+    private Observable<String> getServerTicketCache(String key) {
+        return Observable.create(subscriber -> {
+            String serverRootTicket = getServerTicketCache().get(key);
+            if (!Strings.isNullOrEmpty(serverRootTicket))
+                subscriber.onNext(serverRootTicket);
+            subscriber.onCompleted();
+        });
+    }
+
     public void setServerTicketCache(CacheProvider serverTicketCache) {
         this.serverTicketCache = serverTicketCache;
     }
 
-    public void setAuthenticationClient(AuthenticationClient authenticationClient) {
+    public ClientHelperImpl(ClientSettings clientSettings,
+                            AuthenticationClient authenticationClient,
+                            TicketGrantingClient ticketGrantingClient,
+                            ClientServerExchangeClient clientServerExchangeClient,
+                            Function<String, String> serverTicketGrantingTicketFunction) {
+        this.clientSettings = clientSettings;
         this.authenticationClient = authenticationClient;
-    }
-
-    public void setTicketGrantingClient(TicketGrantingClient ticketGrantingClient) {
         this.ticketGrantingClient = ticketGrantingClient;
-    }
-
-    public void setClientServerExchangeClient(ClientServerExchangeClient clientServerExchangeClient) {
         this.clientServerExchangeClient = clientServerExchangeClient;
-    }
-
-    public void setServerTicketGrantingTicketFunction(Function<String, String> serverTicketGrantingTicketFunction) {
         this.serverTicketGrantingTicketFunction = serverTicketGrantingTicketFunction;
     }
 
-    public ClientHelperImpl() {
-    }
-
     @Override
-    public String getServerSessionKey(String serverName) throws KerberosException {
-        String sessionKey = getSessionKeyCache().get(serverName);
-        int i = getClientSettings().getRetryTimes();
-        while (null == sessionKey && i > 0) {
-            try {
-                getServerTicket(serverName);
-                sessionKey = getSessionKeyCache().get(serverName);
-            } catch (KerberosException ignored) {
-            }
-        }
-        if (null == sessionKey)
-            throw new KerberosException("Cannot get server session key: " + serverName);
-        return sessionKey;
+    public Observable<String> getServerSessionKey(String serverName) {
+        Observable<String> fromCache = getSessionKeyCache(serverName);
+        Observable<String> fromServer = getServerTicket(serverName)
+                .flatMap(s -> getSessionKeyCache(serverName));
+
+        return Observable.concat(fromCache, fromServer)
+                .first()
+                .take(1);
     }
 
     /**
@@ -169,25 +169,39 @@ public class ClientHelperImpl implements ClientHelper {
      *
      * @param serverName the server name.
      * @return server ticket.
-     * @throws KerberosException any exception.
      */
-    public String getServerTicket(String serverName) throws KerberosException {
-        String serverTicket = getServerTicketCache().get(serverName);
-        if (null != serverTicket)
-            return serverTicket;
-        // TGT_SERVER
-        String serverRootTicket = getServerRootTicket(serverName);
-        // SK_TGS, must get it first.
-        String rootSessionKey = getRootSessionKey();
-        // TGT
-        String rootTicket = getRootTicket();
-        // get ST
-        TicketGrantingServiceResponseWrapper wrapper = ticketGrantingClient.ticketGrantingServiceExchange(serverRootTicket, rootSessionKey, rootTicket);
-        getSessionKeyCache().cache(serverName, wrapper.getServerSessionKey());
+    public Observable<String> getServerTicket(String serverName) {
+        Observable<String> fromCache = getServerTicketCache(serverName);
+        return Observable
+                .concat(fromCache, _getServerTicket(serverName))
+                .first();
+    }
 
-        serverTicket = wrapper.getServerTicket();
-        getServerTicketCache().cache(serverName, serverTicket);
-        return serverTicket;
+    private Observable<String> getServerTicket(Entity1 e, String serverName) {
+        return ticketGrantingClient.ticketGrantingServiceExchange(e.TGT_SERVER, e.SK_TGS, e.TGT_TGS)
+                .doOnNext((wrapper) -> {
+                    getSessionKeyCache().cache(serverName, wrapper.getServerSessionKey());
+                    getServerTicketCache().cache(serverName, wrapper.getServerTicket());
+                })
+                .map(TicketGrantingServiceResponseWrapper::getServerTicket);
+    }
+
+    private Observable<String> _getServerTicket(String serverName) {
+        return Observable.combineLatest(
+                getServerRootTicket(serverName), // TGT_SERVER
+                getRootSessionKey(), // SK_TGS
+                getRootTicket(), // TGT_TGS
+                (TGT_SERVER, SK_TGS, TGT_TGS) -> {
+                    Entity1 e = new Entity1();
+                    e.TGT_SERVER = TGT_SERVER;
+                    e.SK_TGS = SK_TGS;
+                    e.TGT_TGS = TGT_TGS;
+                    return e;
+                }
+        ).take(1).flatMap(e ->
+                // get ST
+                getServerTicket(e, serverName)
+        ).take(1);
     }
 
     /**
@@ -195,67 +209,86 @@ public class ClientHelperImpl implements ClientHelper {
      *
      * @param serverName the server name.
      * @return ticket granting ticket belong to {@code serverName}
-     * @throws KerberosException any exception.
      */
-    public String getServerRootTicket(String serverName) throws KerberosException {
-        String serverRootTicket = getTicketGrantingTicketCache().get(serverName);
-        int i = getClientSettings().getRetryTimes();
-        while (null == serverRootTicket && i > 0) {
-            serverRootTicket = serverTicketGrantingTicketFunction.apply(serverName);
+    public Observable<String> getServerRootTicket(String serverName) {
+        Observable<String> fromCache = getTicketGrantingTicketCache(serverName);
+        Observable<String> fromTGSServer = Observable.create((Observable.OnSubscribe<String>) subscriber -> {
+            String serverRootTicket = serverTicketGrantingTicketFunction.apply(serverName);
+            if (Strings.isNullOrEmpty(serverRootTicket)) {
+                subscriber.onError(new KerberosException("Cannot get server root ticket: " + serverName));
+            } else {
+                subscriber.onNext(serverRootTicket);
+                subscriber.onCompleted();
+            }
+        }).doOnNext((String serverRootTicket) -> {
             getTicketGrantingTicketCache().cache(serverName, serverRootTicket);
-            i--;
-        }
-        if (null == serverRootTicket)
-            throw new KerberosException("Cannot get server root ticket: " + serverName);
-        return serverRootTicket;
+        });
+        return Observable.concat(fromCache, fromTGSServer).first();
     }
 
     /**
      * Get TGT
      *
      * @return ticket granting ticket.
-     * @throws KerberosException any exception.
      */
-    public String getRootTicket() throws KerberosException {
-        String rootTicket = getTicketGrantingTicketCache().get(TICKET_GRANTING_SERVER);
-        if (null != rootTicket) {
-            return rootTicket;
-        }
-
-        AuthenticationServiceResponse response = authenticationClient.authenticationServiceExchange();
-        rootTicket = response.getTicketGrantingTicket();
-        getTicketGrantingTicketCache().cache(TICKET_GRANTING_SERVER, rootTicket); // TGT
-        getSessionKeyCache().cache(TICKET_GRANTING_SERVER, response.getSessionKey()); // SK_TGS
-        return rootTicket;
+    public Observable<String> getRootTicket() {
+        Observable<String> fromCache = getTicketGrantingTicketCache(TICKET_GRANTING_SERVER);
+        Observable<String> fromASExchange = authenticationClient.authenticationServiceExchange().doOnNext(response -> {
+            String rootTicket = response.getTicketGrantingTicket();
+            getTicketGrantingTicketCache().cache(TICKET_GRANTING_SERVER, rootTicket); // TGT
+            getSessionKeyCache().cache(TICKET_GRANTING_SERVER, response.getSessionKey()); // SK_TGS
+        }).map(AuthenticationServiceResponse::getTicketGrantingTicket);
+        return Observable.concat(fromCache, fromASExchange).first();
     }
 
     /**
      * Get TGT_TGS
      *
      * @return TGT
-     * @throws KerberosException any exception.
      */
-    public String getRootSessionKey() throws KerberosException {
-        String rootSessionKey = getSessionKeyCache().get(TICKET_GRANTING_SERVER);
-        int i = getClientSettings().getRetryTimes();
-        while (null == rootSessionKey && i > 0) {
-            try {
-                getRootTicket();
-                rootSessionKey = getSessionKeyCache().get(TICKET_GRANTING_SERVER);
-            } catch (KerberosException ignored) {
+    public Observable<String> getRootSessionKey() {
+        Observable<String> fromCache = Observable.create(subscriber -> {
+            String rootSessionKey = getSessionKeyCache().get(TICKET_GRANTING_SERVER);
+            if (!Strings.isNullOrEmpty(rootSessionKey)) {
+                subscriber.onNext(rootSessionKey);
             }
-            i--;
-        }
-        if (null == rootSessionKey)
-            throw new KerberosException("Cannot resolve root session key.");
-        return rootSessionKey;
+            subscriber.onCompleted();
+        });
+        return Observable
+                .concat(fromCache, getRootTicket().flatMap(s -> fromCache))
+                .last();
     }
 
     @Override
-    public void handShake(String serverName) throws KerberosException {
-        String serverSessionKey = getServerSessionKey(serverName);
-        String serverTicket = getServerTicket(serverName);
+    public Observable<String> handShake(String serverName) {
+        if (log.isDebugEnabled())
+            log.debug("Hand shake with; " + serverName);
+        return Observable
+                .combineLatest(
+                        getServerSessionKey(serverName),
+                        getServerTicket(serverName),
+                        (a, b) -> {
+                            Entity2 e = new Entity2();
+                            e.SK_SERVER = a;
+                            e.ST = b;
+                            return e;
+                        }
+                )
+                .flatMap(entity2 -> clientServerExchangeClient.clientServerExchange(serverName, entity2.SK_SERVER, entity2.ST))
+                .subscribeOn(Schedulers.io());
+    }
 
-        clientServerExchangeClient.clientServerExchange(serverName, serverSessionKey, serverTicket);
+    private class Entity1 {
+        private String TGT_SERVER;
+
+        private String SK_TGS;
+
+        private String TGT_TGS;
+    }
+
+    private class Entity2 {
+        private String SK_SERVER;
+
+        private String ST;
     }
 }

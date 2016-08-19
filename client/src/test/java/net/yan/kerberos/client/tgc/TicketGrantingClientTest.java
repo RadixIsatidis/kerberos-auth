@@ -1,7 +1,6 @@
 package net.yan.kerberos.client.tgc;
 
 import net.yan.kerberos.client.AbstractClientTest;
-import net.yan.kerberos.core.KerberosCryptoException;
 import net.yan.kerberos.core.secure.CipherProvider;
 import net.yan.kerberos.data.Authenticator;
 import net.yan.kerberos.data.TicketGrantingServiceRequest;
@@ -17,6 +16,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import rx.exceptions.Exceptions;
 
 import java.security.GeneralSecurityException;
 import java.time.Instant;
@@ -87,8 +87,10 @@ public class TicketGrantingClientTest extends AbstractClientTest {
         client.setAuthenticatorSupplier(() -> authenticator);
         client.setTicketGrantingServiceRequestFunction(this::response);
 
-        TicketGrantingServiceResponseWrapper wrapper = client.ticketGrantingServiceExchange(TGT_SERVER, rootSessionKey, TGT_CLIENT);
-        assertEquals(this.wrapper, wrapper);
+        client.ticketGrantingServiceExchange(TGT_SERVER, rootSessionKey, TGT_CLIENT).subscribe(wrapper -> assertEquals(this.wrapper, wrapper), (e) -> {
+            log.error(e.getMessage(), e);
+            fail(e.getMessage());
+        });
     }
 
     @Test
@@ -100,9 +102,13 @@ public class TicketGrantingClientTest extends AbstractClientTest {
         client.setAuthenticatorSupplier(() -> authenticator);
         client.setTicketGrantingServiceRequestFunction(this::response);
 
-        TicketGrantingServiceResponseWrapper wrapper = client.ticketGrantingServiceExchange(TGT_SERVER, rootSessionKey, TGT_CLIENT);
-        assertEquals(this.wrapper, wrapper);
-        assertEquals(cipherProvider, client.getCipherProvider());
+        client.ticketGrantingServiceExchange(TGT_SERVER, rootSessionKey, TGT_CLIENT).subscribe(wrapper -> {
+            assertEquals(this.wrapper, wrapper);
+            assertEquals(cipherProvider, client.getCipherProvider());
+        }, (e) -> {
+            log.error(e.getMessage(), e);
+            fail(e.getMessage());
+        });
     }
 
     @Test
@@ -113,14 +119,23 @@ public class TicketGrantingClientTest extends AbstractClientTest {
         client.setAuthenticatorSupplier(() -> authenticator);
         client.setTicketGrantingServiceRequestFunction(this::response);
 
-        try {
-            client.ticketGrantingServiceExchange(TGT_SERVER, "shot....", TGT_CLIENT);
+        TicketGrantingClient finalClient = client;
+        client.ticketGrantingServiceExchange(TGT_SERVER, "shot....", TGT_CLIENT).subscribe(wrapper -> {
             fail("Must throw KerberosCryptoException.");
-        } catch (KerberosCryptoException e) {
+        }, (e) -> {
             log.info("Catch exception: " + e.getMessage());
-        }
-        PowerMockito.verifyPrivate(client).invoke("encrypt", Matchers.any(Authenticator.class), Matchers.anyString());
-        PowerMockito.verifyPrivate(client, Mockito.times(0)).invoke("decrypt", Matchers.any(Authenticator.class), Matchers.anyString());
+
+            try {
+                PowerMockito.verifyPrivate(finalClient).invoke("encrypt", Matchers.any(Authenticator.class), Matchers.anyString());
+            } catch (Exception e1) {
+                throw Exceptions.propagate(e1);
+            }
+            try {
+                PowerMockito.verifyPrivate(finalClient, Mockito.times(0)).invoke("decrypt", Matchers.any(Authenticator.class), Matchers.anyString());
+            } catch (Exception e1) {
+                throw Exceptions.propagate(e1);
+            }
+        });
     }
 
     @Test
@@ -142,15 +157,21 @@ public class TicketGrantingClientTest extends AbstractClientTest {
             return response;
         });
 
-        try {
-            client.ticketGrantingServiceExchange(TGT_SERVER, rootSessionKey, TGT_CLIENT);
-            fail("Must throw KerberosCryptoException.");
-        } catch (KerberosCryptoException e) {
+        TicketGrantingClient finalClient = client;
+        client.ticketGrantingServiceExchange(TGT_SERVER, rootSessionKey, TGT_CLIENT).subscribe(e -> fail("Must throw KerberosCryptoException."), e -> {
             log.info("Catch exception: " + e.getMessage());
-        }
-        PowerMockito.verifyPrivate(client).invoke("encrypt", Matchers.any(Authenticator.class), Matchers.anyString());
-        PowerMockito.verifyPrivate(client).invoke("decrypt", Matchers.any(Authenticator.class), Matchers.anyString());
 
+            try {
+                PowerMockito.verifyPrivate(finalClient).invoke("encrypt", Matchers.any(Authenticator.class), Matchers.anyString());
+            } catch (Exception e1) {
+                throw Exceptions.propagate(e1);
+            }
+            try {
+                PowerMockito.verifyPrivate(finalClient).invoke("decrypt", Matchers.any(Authenticator.class), Matchers.anyString());
+            } catch (Exception e1) {
+                throw Exceptions.propagate(e1);
+            }
+        });
     }
 
 }

@@ -1,11 +1,11 @@
 package net.yan.kerberos.examples.server;
 
 import net.yan.kerberos.client.ServerHelper;
-import net.yan.kerberos.core.KerberosException;
 import net.yan.kerberos.data.ClientServerExchangeRequest;
 import net.yan.kerberos.data.ClientServerExchangeResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import rx.Observable;
 
 /**
  * @author yanle
@@ -21,11 +21,11 @@ public class AuthService {
     }
 
 
-    public String getTGT() throws KerberosException {
+    public Observable<String> getTGT() {
         return serverHelper.getRootTicket();
     }
 
-    public ClientServerExchangeResponse auth(ClientServerExchangeRequest request) throws KerberosException {
+    public Observable<ClientServerExchangeResponse> auth(ClientServerExchangeRequest request) {
         return serverHelper.handShake(request);
     }
 }

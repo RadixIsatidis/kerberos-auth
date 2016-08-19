@@ -63,18 +63,10 @@ public class ClientConfiguration {
     public ClientHelper clientHelper(
             ClientProperties clientProperties,
             @Qualifier("clientAuthenticationClient") AuthenticationClient client,
-            CipherProvider cipherProvider,
             TicketGrantingClient ticketGrantingClient,
             ClientServerExchangeClient clientServerExchangeClient,
             AuthenticationServerDao authenticationServerDao
     ) {
-        ClientHelperImpl clientHelper = new ClientHelperImpl();
-        clientHelper.setAuthenticationClient(client);
-        clientHelper.setClientSettings(clientProperties);
-        clientHelper.setCipherProvider(cipherProvider);
-        clientHelper.setTicketGrantingClient(ticketGrantingClient);
-        clientHelper.setClientServerExchangeClient(clientServerExchangeClient);
-        clientHelper.setServerTicketGrantingTicketFunction(authenticationServerDao::resolveServerTGT);
-        return clientHelper;
+        return new ClientHelperImpl(clientProperties, client, ticketGrantingClient, clientServerExchangeClient, authenticationServerDao::resolveServerTGT);
     }
 }

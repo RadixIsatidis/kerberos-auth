@@ -8,6 +8,8 @@ import net.yan.kerberos.data.AuthenticationServiceRequest;
 import net.yan.kerberos.data.AuthenticationServiceResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import rx.Observable;
+import rx.exceptions.Exceptions;
 
 import java.security.GeneralSecurityException;
 import java.util.function.Function;
@@ -96,28 +98,35 @@ public class AuthenticationClient {
 
     /**
      * Authentication service exchange
+     * <p>
+     * Will throw {@link KerberosCryptoException} if any decryption exception.
      *
      * @return authentication service exchange response
-     * @throws KerberosCryptoException any decryption exception.
      * @see #decrypt(String).
      */
-    public AuthenticationServiceResponse authenticationServiceExchange() throws KerberosCryptoException {
-        if (log.isDebugEnabled())
-            log.debug("Start Authentication Service Exchange.");
-        AuthenticationServiceRequest request = authenticationServiceRequestSupplier.get();
-        if (log.isDebugEnabled())
-            log.debug("Get AuthenticationServiceRequest: " + request);
-        String responseString = authenticationServiceRequestFunction.apply(request);
-        if (log.isDebugEnabled())
-            log.debug("Resolve AuthenticationServiceResponse string: " + responseString);
-        AuthenticationServiceResponse response;
-        try {
-            response = decrypt(responseString);
+    public Observable<AuthenticationServiceResponse> authenticationServiceExchange() {
+        return Observable.create((Observable.OnSubscribe<AuthenticationServiceRequest>) subscriber -> {
             if (log.isDebugEnabled())
-                log.debug("Decrypted AuthenticationServiceResponse: " + response);
-        } catch (GeneralSecurityException | ClassNotFoundException e) {
-            throw new KerberosCryptoException(e);
-        }
-        return response;
+                log.debug("Start Authentication Service Exchange.");
+            AuthenticationServiceRequest request = authenticationServiceRequestSupplier.get();
+            subscriber.onNext(request);
+            subscriber.onCompleted();
+        }).map(request -> {
+            if (log.isDebugEnabled())
+                log.debug("Get AuthenticationServiceRequest: " + request);
+            return authenticationServiceRequestFunction.apply(request);
+        }).map(responseString -> {
+            if (log.isDebugEnabled())
+                log.debug("Resolve AuthenticationServiceResponse string: " + responseString);
+            AuthenticationServiceResponse response;
+            try {
+                response = decrypt(responseString);
+                if (log.isDebugEnabled())
+                    log.debug("Decrypted AuthenticationServiceResponse: " + response);
+            } catch (GeneralSecurityException | ClassNotFoundException e) {
+                throw Exceptions.propagate(new KerberosCryptoException(e));
+            }
+            return response;
+        });
     }
 }
